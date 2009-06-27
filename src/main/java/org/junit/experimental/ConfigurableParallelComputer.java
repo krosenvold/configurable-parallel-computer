@@ -17,6 +17,8 @@ import org.junit.runners.model.RunnerInterceptor;
 public class ConfigurableParallelComputer extends Computer {
     private final boolean fClasses;
     private final boolean fMethods;
+    private final ExecutorService fService;
+
 
     private final Integer numberOfThreads;
     private final boolean perCore;
@@ -27,6 +29,12 @@ public class ConfigurableParallelComputer extends Computer {
         this.fMethods = fMethods;
         this.numberOfThreads = numberOfThreads;
         this.perCore = perCore;
+        System.out.println("Created thread pol with " + numberOfThreads + "thread");
+        fService = Executors.newCachedThreadPool(); //getNumberOFThreads());
+    }
+
+    public void close(){
+        fService.shutdown();
     }
 
     public static Computer classes(Integer numberOfThreads, boolean perCore) {
@@ -37,9 +45,9 @@ public class ConfigurableParallelComputer extends Computer {
         return new ConfigurableParallelComputer(false, true, numberOfThreads, perCore);
     }
 
-    private static Runner parallelize(Runner runner, int numberOFThreads) {
+    private static Runner parallelize(Runner runner, ExecutorService executorService) {
         if (runner instanceof ParentRunner<?>) {
-            ((ParentRunner<?>) runner).setRunnerInterceptor(new MyRunnerINterceptor(numberOFThreads));
+            ((ParentRunner<?>) runner).setRunnerInterceptor(new MyRunnerINterceptor(executorService ));
         }
         return runner;
     }
@@ -52,26 +60,23 @@ public class ConfigurableParallelComputer extends Computer {
     public Runner getSuite(RunnerBuilder builder, java.lang.Class<?>[] classes)
             throws InitializationError {
         Runner suite = super.getSuite(builder, classes);
-        return fClasses ? parallelize(suite, getNumberOFThreads()) : suite;
+        return fClasses ? parallelize(suite, fService) : suite;
     }
 
     @Override
     protected Runner getRunner(RunnerBuilder builder, Class<?> testClass)
             throws Throwable {
         Runner runner = super.getRunner(builder, testClass);
-        return fMethods ? parallelize(runner, getNumberOFThreads()) : runner;
+        return fMethods ? parallelize(runner, fService) : runner;
     }
 
     public static class MyRunnerINterceptor implements RunnerInterceptor {
-        private final int numberOfTotalThreads;
         private final ExecutorService fService;
         private final List<Future<Object>> fResults = new ArrayList<Future<Object>>();
 
 
-        MyRunnerINterceptor(int numberOfThreads) {
-            this.numberOfTotalThreads = numberOfThreads;
-            System.out.println("Created thread pol with " + numberOfThreads + "thread");
-            fService = Executors.newFixedThreadPool(numberOfTotalThreads);
+        MyRunnerINterceptor(ExecutorService fService) {
+            this.fService = fService;
         }
 
 
@@ -91,7 +96,6 @@ public class ConfigurableParallelComputer extends Computer {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            fService.shutdown();
         }
     }
 }
