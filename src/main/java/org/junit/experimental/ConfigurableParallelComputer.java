@@ -29,7 +29,7 @@ public class ConfigurableParallelComputer extends Computer {
         this.fMethods = fMethods;
         this.numberOfThreads = numberOfThreads;
         this.perCore = perCore;
-        System.out.println("Created thread pol with " + numberOfThreads + "thread");
+        System.out.println("Created thread pol with " + getNumberOFThreads() + "thread");
         fService = Executors.newCachedThreadPool(); //getNumberOFThreads());
     }
 
