@@ -14,7 +14,7 @@ import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
 import org.junit.runners.model.RunnerInterceptor;
 
-public class ConfigruableParallelComputer extends Computer {
+public class ConfigurableParallelComputer extends Computer {
     private final boolean fClasses;
     private final boolean fMethods;
 
@@ -22,7 +22,7 @@ public class ConfigruableParallelComputer extends Computer {
     private final boolean perCore;
 
 
-    public ConfigruableParallelComputer(boolean fClasses, boolean fMethods, Integer numberOfThreads, boolean perCore) {
+    public ConfigurableParallelComputer(boolean fClasses, boolean fMethods, Integer numberOfThreads, boolean perCore) {
         this.fClasses = fClasses;
         this.fMethods = fMethods;
         this.numberOfThreads = numberOfThreads;
@@ -30,11 +30,11 @@ public class ConfigruableParallelComputer extends Computer {
     }
 
     public static Computer classes(Integer numberOfThreads, boolean perCore) {
-        return new ConfigruableParallelComputer(true, false, numberOfThreads, perCore);
+        return new ConfigurableParallelComputer(true, false, numberOfThreads, perCore);
     }
 
     public static Computer methods(Integer numberOfThreads, boolean perCore) {
-        return new ConfigruableParallelComputer(false, true, numberOfThreads, perCore);
+        return new ConfigurableParallelComputer(false, true, numberOfThreads, perCore);
     }
 
     private static Runner parallelize(Runner runner, int numberOFThreads) {
@@ -70,6 +70,7 @@ public class ConfigruableParallelComputer extends Computer {
 
         MyRunnerINterceptor(int numberOfThreads) {
             this.numberOfTotalThreads = numberOfThreads;
+            System.out.println("Created thread pol with " + numberOfThreads + "thread");
             fService = Executors.newFixedThreadPool(numberOfTotalThreads);
         }
 
