@@ -11,117 +11,85 @@ import java.util.*;
  * Demultiplexes threaded running og tests into something that does not look threaded.
  */
 public class DemultiplexingRunListener extends RunListener {
-    private final Vector<TestResult> testResults = new Vector<TestResult>(); 
+    private final Map<String, ClassReport> classList = new  HashMap<String, ClassReport>();
+    private final RunListener realtarget;
+
+    public DemultiplexingRunListener(RunListener realtarget) {
+        this.realtarget = realtarget;
+    }
 
     @Override
     public void testRunStarted(Description description) throws Exception {
-        super.testRunStarted(description);
+        // Do nothing. We discard this event because it's basically meaningless
     }
 
     @Override
-    public void testRunFinished(Result result) throws Exception {
-        super.testRunFinished(result);    
+    public void testRunFinished(Result outerResult) throws Exception {
+        for (ClassReport classReport : classList.values()){
+            classReport.testRunFinished( outerResult);
+        }
     }
 
+    private MethodReport getMethodReport( Description description) {
+        ClassReport classReport = getClassReport( description);
+        return classReport.getMethodReport( description.getMethodName());
+    }
+    private ClassReport getClassReport(Description description) {
+        ClassReport result;
+        synchronized (classList){
+            result = innerGetClassReport( description.getClassName());
+        }
+        return result;
+    }
+    private ClassReport getOrCreateClassReport(Description description) throws Exception {
+        ClassReport result;
+        synchronized (classList){
+            result = innerGetClassReport( description.getClassName());
+            if (result == null){
+                result = classList.put(description.getClassName(), new ClassReport(realtarget));
+            }
+        }
+        return result;
+    }
+    private ClassReport innerGetClassReport(String className){
+        return classList.get(className);
+    }
 
-    public List<TestResult> sort(){
-        List<TestResult> results = new ArrayList<TestResult>( testResults); 
+ /*   public List<TestResult> sort(){
+        List<TestResult> results = new ArrayList<TestResult>( testResults);
         Collections.sort( results, new TestResultComparator());
         return results;
     }
-
+   */
 
     @Override
     public void testStarted(Description description) throws Exception {
-        testResults.add( new DescriptionResult(description, ResultType.started));
+        ClassReport classReport = getOrCreateClassReport(description);
+        classReport.getMethodReport( description.getMethodName()).testStarted( description);
     }
 
     @Override
     public void testFinished(Description description) throws Exception {
-        testResults.add( new DescriptionResult(description, ResultType.finished));
+        getMethodReport(description).testFinished( description);
     }
 
     @Override
     public void testFailure(Failure failure) throws Exception {
-        testResults.add( new FailureResult(failure, ResultType.failure));
+        getMethodReport(failure.getDescription()).testFailure( failure);
     }
 
     @Override
     public void testAssumptionFailure(Failure failure) {
-        testResults.add( new FailureResult( failure, ResultType.failure));
+        getMethodReport(failure.getDescription()).testAssumptionFailure( failure);
     }
 
     @Override
     public void testIgnored(Description description) throws Exception {
-        testResults.add( new DescriptionResult( description, ResultType.ignored));
-    }
+        getMethodReport(description).testFinished( description);
+     }
 
-    enum ResultType implements Comparable<ResultType> {
-        started, finished, failure, assumption, ignored;
-
-        public int compareTo(ResultType lhs, ResultType rhs) {
-            if (lhs == rhs) return 0;
-            if (lhs == started) return -1;
-            return +1;
-        }
-
-
-    }
-
-    abstract class TestResult {
-        private final String className;
-        private final ResultType result;
-
-        TestResult(String className, ResultType result) {
-            this.className = className;
-            this.result = result;
-        }
-
-        public String getClassName() {
-            return className;
-        }
-        public abstract String getTestName();
-
-        public ResultType getResult() {
-            return result;
-        }
-    }
-
-    class DescriptionResult extends TestResult {
-        private final Description description;
-
-        DescriptionResult(Description description, ResultType result ) {
-            super(description.getClassName(), result);
-            this.description = description;
-        }
-
-        public Description getDescription() {
-            return description;
-        }
-
-        public String getTestName() {
-            return description.getMethodName();
-        }
-
-    }
-    class FailureResult extends TestResult {
-        private final Failure failure;
-
-        FailureResult(Failure failure, ResultType resultType) {
-            super(failure.getDescription().getClassName(), resultType);
-            this.failure = failure;
-        }
-
-        public Failure getFailure() {
-            return failure;
-        }
-
-        public String getTestName() {
-            return failure.getDescription().getMethodName();
-        }
-
-    }
-
+ 
+/*    class ClassReport {
     class TestResultComparator<T> implements Comparator<TestResult>{
         public int compare(TestResult lhs, TestResult rhs) {
             int i = lhs.getClassName().compareTo(rhs.getClassName());
@@ -130,5 +98,5 @@ public class DemultiplexingRunListener extends RunListener {
             if (tn != 0) return tn;
             return lhs.getResult().compareTo( rhs.getResult());
         }
-    }
+    }*/
 }
