@@ -11,7 +11,7 @@ import java.util.*;
  * Demultiplexes threaded running og tests into something that does not look threaded.
  */
 public class DemultiplexingRunListener extends RunListener {
-    private final Map<String, ClassReport> classList = new  HashMap<String, ClassReport>();
+    private final Map<String, ClassReport> classList = new HashMap<String, ClassReport>();
     private final RunListener realtarget;
 
     public DemultiplexingRunListener(RunListener realtarget) {
@@ -25,71 +25,40 @@ public class DemultiplexingRunListener extends RunListener {
 
     @Override
     public void testRunFinished(Result outerResult) throws Exception {
-        for (ClassReport classReport : classList.values()){
-            classReport.testRunFinished( outerResult);
+        for (ClassReport classReport : classList.values()) {
+            classReport.testRunFinished();
         }
     }
-
-    private MethodReport getMethodReport( Description description) {
-        ClassReport classReport = getClassReport( description);
-        return classReport.getMethodReport( description.getMethodName());
-    }
-    private ClassReport getClassReport(Description description) {
-        ClassReport result;
-        synchronized (classList){
-            result = innerGetClassReport( description.getClassName());
-        }
-        return result;
-    }
-    private ClassReport getOrCreateClassReport(Description description) throws Exception {
-        ClassReport result;
-        synchronized (classList){
-            result = innerGetClassReport( description.getClassName());
-            if (result == null){
-                result = classList.put(description.getClassName(), new ClassReport(realtarget));
-            }
-        }
-        return result;
-    }
-    private ClassReport innerGetClassReport(String className){
-        return classList.get(className);
-    }
-
- /*   public List<TestResult> sort(){
-        List<TestResult> results = new ArrayList<TestResult>( testResults);
-        Collections.sort( results, new TestResultComparator());
-        return results;
-    }
-   */
 
     @Override
     public void testStarted(Description description) throws Exception {
-        ClassReport classReport = getOrCreateClassReport(description);
-        classReport.getMethodReport( description.getMethodName()).testStarted( description);
+        RunListener classReport = getOrCreateClassReport(description);
+        classReport.testStarted( description);
     }
 
     @Override
     public void testFinished(Description description) throws Exception {
-        getMethodReport(description).testFinished( description);
+        RunListener classReport = getClassReport( description);
+        classReport.testFinished( description);
     }
 
     @Override
     public void testFailure(Failure failure) throws Exception {
-        getMethodReport(failure.getDescription()).testFailure( failure);
+        getClassReport( failure.getDescription()).testFailure( failure);
     }
 
     @Override
     public void testAssumptionFailure(Failure failure) {
-        getMethodReport(failure.getDescription()).testAssumptionFailure( failure);
+        getClassReport(failure.getDescription()).testAssumptionFailure( failure);
     }
 
     @Override
     public void testIgnored(Description description) throws Exception {
-        getMethodReport(description).testFinished( description);
-     }
+        getClassReport(description).testIgnored(description);
+    }
 
- 
-/*    class ClassReport {
+
+    /*    class ClassReport {
     class TestResultComparator<T> implements Comparator<TestResult>{
         public int compare(TestResult lhs, TestResult rhs) {
             int i = lhs.getClassName().compareTo(rhs.getClassName());
@@ -99,4 +68,36 @@ public class DemultiplexingRunListener extends RunListener {
             return lhs.getResult().compareTo( rhs.getResult());
         }
     }*/
+    ClassReport getClassReport(Description description) {
+        ClassReport result;
+        synchronized (classList) {
+            result = innerGetClassReport(description.getClassName());
+        }
+        return result;
+    }
+
+    private ClassReport getOrCreateClassReport(Description description) throws Exception {
+        ClassReport result;
+        synchronized (classList) {
+            result = innerGetClassReport(description.getClassName());
+            if (result == null) {
+                realtarget.testRunStarted( description);
+                result = new ClassReport(realtarget);
+                classList.put(description.getClassName(), result);
+            }
+        }
+        return result;
+    }
+
+    private ClassReport innerGetClassReport(String className) {
+        return classList.get(className);
+    }
+
+    /*   public List<TestResult> sort(){
+     List<TestResult> results = new ArrayList<TestResult>( testResults);
+     Collections.sort( results, new TestResultComparator());
+     return results;
+ }
+    */
+
 }

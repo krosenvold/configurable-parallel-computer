@@ -1,39 +1,60 @@
 package org.junit.experimental;
 
 import org.junit.runner.notification.RunListener;
+import org.junit.runner.notification.Failure;
 import org.junit.runner.Result;
 import org.junit.runner.Description;
 
-import java.util.Map;
-import java.util.HashMap;
-
-public class ClassReport {
-    private final Map<String, MethodReport> methodReports = new HashMap<String, MethodReport>();
+public class ClassReport extends RunListener {
     private final RunListener realtarget;
-    private final Description description;
-    private final Result classResult = new Result();
+    private final Result resultForThisClass = new Result();
+    private final RunListener classRunListener = resultForThisClass.createListener();
 
-    public ClassReport(RunListener realtarget, Description description) {
+    public ClassReport(RunListener realtarget) {
         this.realtarget = realtarget;
-        this.description = description;
     }
 
-    public MethodReport getMethodReport(String methodName){
-        MethodReport result;
-        synchronized ( methodReports){
-            result = methodReports.get( methodName);
-            if (result == null)
-               result = methodReports.put(methodName,  new MethodReport());
-        }
-        return result;
+    @Override
+    public void testRunFinished(Result result) throws Exception {
+        realtarget.testRunFinished( result);
+        classRunListener.testRunFinished( result);
     }
 
-    public void testRunFinished(RunListener listener) throws Exception {
-        listener.testRunStarted( description);
-        for (MethodReport methodReport : methodReports.values()){
-            methodReport.replay( listener);
-        }
-        realtarget.testRunFinished(classResult);
+    @Override
+    public void testStarted(Description description) throws Exception {
+        realtarget.testStarted(description);
+        classRunListener.testStarted( description);
     }
 
+    @Override
+    public void testFinished(Description description) throws Exception {
+        realtarget.testFinished(description);
+        classRunListener.testFinished( description);
+    }
+
+    @Override
+    public void testFailure(Failure failure) throws Exception {
+        realtarget.testFailure(failure);
+        classRunListener.testFailure( failure);
+    }
+
+    @Override
+    public void testAssumptionFailure(Failure failure) {
+        realtarget.testAssumptionFailure(failure);
+        classRunListener.testAssumptionFailure( failure);
+    }
+
+    @Override
+    public void testIgnored(Description description) throws Exception {
+        realtarget.testIgnored(description);
+        classRunListener.testIgnored( description);
+    }
+
+    public void testRunFinished() throws Exception {
+        realtarget.testRunFinished(resultForThisClass);
+    }
+
+    Result getResultForThisClass() {
+        return resultForThisClass;
+    }
 }

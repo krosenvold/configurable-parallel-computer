@@ -1,10 +1,13 @@
 package org.junit.experimental;
 
 import org.junit.Test;
+import org.junit.internal.TextListener;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Computer;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
+import org.junit.runner.notification.RunListener;
+import static org.mockito.Mockito.*;
 
 import java.util.List;
 
@@ -19,7 +22,8 @@ public class DemultiplexingRunListenerTest {
     @Test
     public void testTestStarted() throws Exception {
 
-        DemultiplexingRunListener listener = new DemultiplexingRunListener();
+        RunListener real = mock(RunListener.class);
+        DemultiplexingRunListener listener = new DemultiplexingRunListener(real);
         Description ruNDescr = Description.createSuiteDescription(DemultiplexingRunListenerTest.class);
         Description description1 = Description.createTestDescription( DemultiplexingRunListenerTest.class, "testStub1");
         Description description2 = Description.createTestDescription( Dummy.class, "testStub2");
@@ -32,27 +36,27 @@ public class DemultiplexingRunListenerTest {
         Result temp = new Result();
         listener.testRunFinished( temp);
 
-        List<DemultiplexingRunListener.TestResult> resultList = listener.sort();
-
-        System.out.println("resultList = " + resultList);
-
-        JUnitCore jUnitCore = new JUnitCore();
+        verify(real).testRunStarted( description1);
+        verify(real).testStarted( description1);
+        verify(real).testRunStarted( description2);
+        verify(real).testStarted( description2);
+        verify(real).testRunFinished( listener.getClassReport( description1).getResultForThisClass());
+        verify(real).testRunFinished( listener.getClassReport( description2).getResultForThisClass());
+      /*  JUnitCore jUnitCore = new JUnitCore();
         jUnitCore.addListener( listener);
 
         jUnitCore.run(new Class[] {DemultiplexingRunListenerTest.class});
-
+        */
         // Add your code here
     }
     @Test
     public void testRegularJunitCoreRun() throws Exception {
 
-        DemultiplexingRunListener listener = new DemultiplexingRunListener();
+          TextListener real = new TextListener(System.out);
+        DemultiplexingRunListener listener = new DemultiplexingRunListener(real);
         JUnitCore jUnitCore = new JUnitCore();
         jUnitCore.addListener( listener);
-
         jUnitCore.run(new Class[] {Dummy.class});
-
-        // Add your code here
     }
 
     @Test
