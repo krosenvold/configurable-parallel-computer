@@ -20,17 +20,19 @@ public class ConfigurableParallelComputer extends Computer {
     private final ExecutorService fService;
 
 
-    private final Integer numberOfThreads;
-    private final boolean perCore;
-
+    public ConfigurableParallelComputer() {
+        this.fClasses = true;
+        this.fMethods = true;
+        System.out.println("Unlimited thread pool created");
+        fService = Executors.newCachedThreadPool(); 
+    }
 
     public ConfigurableParallelComputer(boolean fClasses, boolean fMethods, Integer numberOfThreads, boolean perCore) {
         this.fClasses = fClasses;
         this.fMethods = fMethods;
-        this.numberOfThreads = numberOfThreads;
-        this.perCore = perCore;
-        System.out.println("Created thread pol with " + getNumberOFThreads() + "thread");
-        fService = Executors.newCachedThreadPool(); //getNumberOFThreads());
+        int totalThreads = numberOfThreads * (perCore ? Runtime.getRuntime().availableProcessors() : 1);
+        System.out.println("Created thread pool with " + totalThreads + "thread");
+        fService = Executors.newFixedThreadPool(totalThreads);
     }
 
     public void close(){
@@ -52,10 +54,6 @@ public class ConfigurableParallelComputer extends Computer {
         return runner;
     }
 
-    private int getNumberOFThreads( ){
-        return numberOfThreads * (perCore ? Runtime.getRuntime().availableProcessors() : 1);
-        
-    }
     @Override
     public Runner getSuite(RunnerBuilder builder, java.lang.Class<?>[] classes)
             throws InitializationError {
