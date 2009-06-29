@@ -20,6 +20,7 @@ public class ConfigurableParallelComputer extends Computer {
     private final boolean fMethods;
     private final ExecutorService fService;
 
+
     public ConfigurableParallelComputer() {
         this (true, true);
     }
@@ -86,7 +87,7 @@ public class ConfigurableParallelComputer extends Computer {
         public void runChild(final Runnable childStatement) {
             fResults.add(fService.submit(new Callable<Object>() {
                 public Object call() throws Exception {
-                    //System.out.println("childStatement = " + atomicLong.getAndIncrement());
+//                    System.out.println("childStatement = " + atomicLong.getAndIncrement());
                     childStatement.run();
                     return null;
                 }
@@ -94,7 +95,13 @@ public class ConfigurableParallelComputer extends Computer {
         }
 
         public void finished() {
-            // DO nothing. We're not going to block for anything here. Each thread just "does" what it's supposed to do ;)
+            // DO nothin
+            for (Future<Object> each : fResults)
+                try {
+                    each.get();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
         }
     }
 }

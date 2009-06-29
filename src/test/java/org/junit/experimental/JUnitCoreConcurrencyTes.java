@@ -27,13 +27,14 @@ import org.junit.runner.Computer;
 import org.junit.runner.Result;
 
 /**
+ * Simple concurrency test of junit core.
  * @author <a href="mailto:kristian@zeniorD0Tno">Kristian Rosenvold</a>
  */
-public class RunALotOfTests {
+public class JUnitCoreConcurrencyTes {
 
 	@Test
 	public void testFullTestRun() throws Exception {
-        final int NUMTESTS = 66;
+        final int NUMTESTS = 666;
         List<Class> realClasses = new ArrayList<Class>();
 
 
@@ -46,12 +47,13 @@ public class RunALotOfTests {
         JUnitCore jUnitCore = new JUnitCore();
         jUnitCore.addListener( listener);
 
-        Computer computer = new ConfigurableParallelComputer();
+        ParallelComputer computer = new ParallelComputer(true, true);
         long start = System.currentTimeMillis();
         jUnitCore.run(computer, realClasses.toArray(new Class[realClasses.size()]) );
+        //computer.close();
         System.out.println("elapsed " + (System.currentTimeMillis() - start));
-
         assertEquals("No tests should fail, right ?",  0, result.getFailures().size());
+        assertEquals("All tests should succeed, right ?",  0, result.getIgnoreCount());
         assertEquals("All tests should succeed, right ?",  NUMTESTS * 3, result.getRunCount());
     }
 
