@@ -58,8 +58,8 @@ public class RunALotOfTests {
      @Test
     public void testOneMethod(){
          JUnitCore jUnitCore = new JUnitCore();
-         Computer computer = new ConfigurableParallelComputer();
-         jUnitCore.run( computer, new Class[] { Dummy.class, Dummy.class});
+         Computer computer = new ConfigurableParallelComputer(true, true);
+         jUnitCore.run( computer, new Class[] { Dummy.class, Dummy.class, Dummy.class});
 
      }
 
