@@ -47,10 +47,10 @@ public class JUnitCoreConcurrencyTes {
         JUnitCore jUnitCore = new JUnitCore();
         jUnitCore.addListener( listener);
 
-        ParallelComputer computer = new ParallelComputer(true, true);
+        ConfigurableParallelComputer computer = new ConfigurableParallelComputer(true, true);
         long start = System.currentTimeMillis();
         jUnitCore.run(computer, realClasses.toArray(new Class[realClasses.size()]) );
-        //computer.close();
+        computer.close();
         System.out.println("elapsed " + (System.currentTimeMillis() - start));
         assertEquals("No tests should fail, right ?",  0, result.getFailures().size());
         assertEquals("All tests should succeed, right ?",  0, result.getIgnoreCount());
