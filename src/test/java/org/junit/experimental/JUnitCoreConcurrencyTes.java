@@ -32,7 +32,7 @@ import org.junit.runner.Result;
  * @author <a href="mailto:kristian@zeniorD0Tno">Kristian Rosenvold</a>
  */
 public class JUnitCoreConcurrencyTes {
-    private static final int NUMTESTS = 666;
+    private static final int NUMTESTS = 1000;
 
     @Test
    public void testOneMethod(){
