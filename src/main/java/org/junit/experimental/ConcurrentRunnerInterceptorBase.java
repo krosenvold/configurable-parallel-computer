@@ -1,6 +1,7 @@
 package org.junit.experimental;
 
 import java.util.concurrent.Future;
+import java.util.concurrent.ExecutionException;
 import java.util.List;
 
 /**
@@ -11,5 +12,5 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 public abstract class ConcurrentRunnerInterceptorBase {
-    public abstract void done() throws InterruptedException;
+    public abstract void done() throws InterruptedException, ExecutionException;
 }

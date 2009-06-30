@@ -38,11 +38,11 @@ public class DelayedRunner extends ConcurrentRunnerInterceptorBase implements Ru
     public void finished() {
     }
 
-    public void done() throws InterruptedException {
+    public void done() throws InterruptedException, ExecutionException {
         List<Future<Object>> futures = fService.invokeAll(fResults);
+        for (Future<Object> each : futures)
+               each.get();
         fService.shutdown();
-//        for (Future<Object> each : futures)
-//               each.get();
     }
 
 }

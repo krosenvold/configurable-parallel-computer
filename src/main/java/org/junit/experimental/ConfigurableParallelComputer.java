@@ -2,6 +2,7 @@ package org.junit.experimental;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.runner.Computer;
 import org.junit.runner.Runner;
@@ -29,7 +30,8 @@ public class ConfigurableParallelComputer extends Computer {
         System.out.println("Unlimited thread pool created");
         fixedPool = false;
         fService = Executors.newCachedThreadPool();
-        this.classRunnerInterceptor = this.methodRunnerInterceptor = new SingleExecutorServiceRunner(fService);
+        this.classRunnerInterceptor = new SingleExecutorServiceRunner(fService);
+        this.methodRunnerInterceptor = new SingleExecutorServiceRunner(fService);
     }
 
     public ConfigurableParallelComputer(boolean fClasses, boolean fMethods, Integer numberOfThreads, boolean perCore) {
@@ -43,10 +45,17 @@ public class ConfigurableParallelComputer extends Computer {
         this.classRunnerInterceptor = new DelayedClassRunner();
     }
 
-    public void close(){
+    public void close() throws ExecutionException {
         if (this.methodRunnerInterceptor instanceof ConcurrentRunnerInterceptorBase){
             try {
                 ((ConcurrentRunnerInterceptorBase) methodRunnerInterceptor).done();
+            } catch (InterruptedException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+        }
+        if (this.classRunnerInterceptor instanceof ConcurrentRunnerInterceptorBase){
+            try {
+                ((ConcurrentRunnerInterceptorBase) classRunnerInterceptor).done();
             } catch (InterruptedException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
@@ -81,4 +90,12 @@ public class ConfigurableParallelComputer extends Computer {
         return fMethods ? parallelize(runner, methodRunnerInterceptor) : runner;
     }
 
+    @Override
+    public String toString() {
+        return "ConfigurableParallelComputer{" +
+                "fClasses=" + fClasses +
+                ", fMethods=" + fMethods +
+                ", fixedPool=" + fixedPool +
+                '}';
+    }
 }

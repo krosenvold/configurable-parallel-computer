@@ -5,8 +5,12 @@ import org.junit.runners.model.RunnerInterceptor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
+
+import com.sun.corba.se.impl.orbutil.concurrent.Sync;
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,7 +21,7 @@ import java.util.ArrayList;
 */
 public class SingleExecutorServiceRunner extends ConcurrentRunnerInterceptorBase implements RunnerInterceptor {
     private final ExecutorService fService;
-    private final List<Future<Object>> fResults = new ArrayList<Future<Object>>();
+    private final ConcurrentLinkedQueue<Future<Object>> fResults = new ConcurrentLinkedQueue<Future<Object>>();
 
     SingleExecutorServiceRunner(ExecutorService fService) {
         this.fService = fService;
@@ -35,13 +39,13 @@ public class SingleExecutorServiceRunner extends ConcurrentRunnerInterceptorBase
 
     public void finished() {
         // DO nothin
-//        for (Future<Object> each : fResults)
- //           try {
-  //              each.get();
-    //        } catch (Exception e) {
-      //          e.printStackTrace();
-         //   }
     }
     public void done() {
+        for (Future<Object> each : fResults)
+            try {
+                each.get();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
     }
 }
