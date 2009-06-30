@@ -58,16 +58,6 @@ public class DemultiplexingRunListener extends RunListener {
     }
 
 
-    /*    class ClassReport {
-    class TestResultComparator<T> implements Comparator<TestResult>{
-        public int compare(TestResult lhs, TestResult rhs) {
-            int i = lhs.getClassName().compareTo(rhs.getClassName());
-            if (i != 0) return i;
-            int tn = lhs.getTestName().compareTo(rhs.getClassName());
-            if (tn != 0) return tn;
-            return lhs.getResult().compareTo( rhs.getResult());
-        }
-    }*/
     ClassReport getClassReport(Description description) {
         ClassReport result;
         synchronized (classList) {
@@ -92,12 +82,4 @@ public class DemultiplexingRunListener extends RunListener {
     private ClassReport innerGetClassReport(String className) {
         return classList.get(className);
     }
-
-    /*   public List<TestResult> sort(){
-     List<TestResult> results = new ArrayList<TestResult>( testResults);
-     Collections.sort( results, new TestResultComparator());
-     return results;
- }
-    */
-
 }

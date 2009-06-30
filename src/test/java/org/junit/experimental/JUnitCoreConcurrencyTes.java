@@ -47,7 +47,7 @@ public class JUnitCoreConcurrencyTes {
         JUnitCore jUnitCore = new JUnitCore();
         jUnitCore.addListener( listener);
 
-        ConfigurableParallelComputer computer = new ConfigurableParallelComputer(true, true);
+        ConfigurableParallelComputer computer = new ConfigurableParallelComputer(true, false);
         long start = System.currentTimeMillis();
         jUnitCore.run(computer, realClasses.toArray(new Class[realClasses.size()]) );
         computer.close();

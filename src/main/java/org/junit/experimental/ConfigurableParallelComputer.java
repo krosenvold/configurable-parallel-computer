@@ -1,12 +1,7 @@
 package org.junit.experimental;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.runner.Computer;
 import org.junit.runner.Runner;
@@ -18,7 +13,9 @@ import org.junit.runners.model.RunnerInterceptor;
 public class ConfigurableParallelComputer extends Computer {
     private final boolean fClasses;
     private final boolean fMethods;
+    private final boolean fixedPool;
     private final ExecutorService fService;
+    private final RunnerInterceptor runnerInterceptor;
 
 
     public ConfigurableParallelComputer() {
@@ -28,16 +25,20 @@ public class ConfigurableParallelComputer extends Computer {
     public ConfigurableParallelComputer(boolean fClasses, boolean fMethods) {
         this.fClasses = fClasses;
         this.fMethods = fMethods;
-         System.out.println("Unlimited thread pool created");
+        System.out.println("Unlimited thread pool created");
+        fixedPool = false;
         fService = Executors.newCachedThreadPool();
+        this.runnerInterceptor = new SingleExecutorServiceRunner(fService);
     }
 
     public ConfigurableParallelComputer(boolean fClasses, boolean fMethods, Integer numberOfThreads, boolean perCore) {
         this.fClasses = fClasses;
         this.fMethods = fMethods;
         int totalThreads = numberOfThreads * (perCore ? Runtime.getRuntime().availableProcessors() : 1);
-        System.out.println("Created thread pool with " + totalThreads + "thread");
+        System.out.println("Created thread pool with " + totalThreads + " threads");
+        fixedPool = true;
         fService = Executors.newFixedThreadPool(totalThreads);
+        this.runnerInterceptor = new DelayedRunner( );
     }
 
     public void close(){
@@ -52,56 +53,23 @@ public class ConfigurableParallelComputer extends Computer {
         return new ConfigurableParallelComputer(false, true, numberOfThreads, perCore);
     }
 
-    private static Runner parallelize(Runner runner, ExecutorService executorService) {
+    private Runner parallelize(Runner runner) {
         if (runner instanceof ParentRunner<?>) {
-            ((ParentRunner<?>) runner).setRunnerInterceptor(new MyRunnerINterceptor(executorService ));
+            ((ParentRunner<?>) runner).setRunnerInterceptor( runnerInterceptor);
         }
         return runner;
     }
 
     @Override
-    public Runner getSuite(RunnerBuilder builder, java.lang.Class<?>[] classes)
-            throws InitializationError {
+    public Runner getSuite(RunnerBuilder builder, java.lang.Class<?>[] classes) throws InitializationError {
         Runner suite = super.getSuite(builder, classes);
-        return fClasses ? parallelize(suite, fService) : suite;
+        return fClasses ? parallelize(suite) : suite;
     }
 
     @Override
-    protected Runner getRunner(RunnerBuilder builder, Class<?> testClass)
-            throws Throwable {
+    protected Runner getRunner(RunnerBuilder builder, Class<?> testClass) throws Throwable {
         Runner runner = super.getRunner(builder, testClass);
-        return fMethods ? parallelize(runner, fService) : runner;
+        return fMethods ? parallelize(runner) : runner;
     }
 
-    public static class MyRunnerINterceptor implements RunnerInterceptor {
-        private final ExecutorService fService;
-        private final List<Future<Object>> fResults = new ArrayList<Future<Object>>();
-        private final AtomicLong atomicLong = new AtomicLong();
-
-
-        MyRunnerINterceptor(ExecutorService fService) {
-            this.fService = fService;
-        }
-
-
-        public void runChild(final Runnable childStatement) {
-            fResults.add(fService.submit(new Callable<Object>() {
-                public Object call() throws Exception {
-//                    System.out.println("childStatement = " + atomicLong.getAndIncrement());
-                    childStatement.run();
-                    return null;
-                }
-            }));
-        }
-
-        public void finished() {
-            // DO nothin
-            for (Future<Object> each : fResults)
-                try {
-                    each.get();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-        }
-    }
 }
