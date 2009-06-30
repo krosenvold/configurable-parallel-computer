@@ -15,7 +15,8 @@ public class ConfigurableParallelComputer extends Computer {
     private final boolean fMethods;
     private final boolean fixedPool;
     private final ExecutorService fService;
-    private final RunnerInterceptor runnerInterceptor;
+    private final RunnerInterceptor methodRunnerInterceptor;
+    private final RunnerInterceptor classRunnerInterceptor;
 
 
     public ConfigurableParallelComputer() {
@@ -28,7 +29,7 @@ public class ConfigurableParallelComputer extends Computer {
         System.out.println("Unlimited thread pool created");
         fixedPool = false;
         fService = Executors.newCachedThreadPool();
-        this.runnerInterceptor = new SingleExecutorServiceRunner(fService);
+        this.classRunnerInterceptor = this.methodRunnerInterceptor = new SingleExecutorServiceRunner(fService);
     }
 
     public ConfigurableParallelComputer(boolean fClasses, boolean fMethods, Integer numberOfThreads, boolean perCore) {
@@ -38,10 +39,17 @@ public class ConfigurableParallelComputer extends Computer {
         System.out.println("Created thread pool with " + totalThreads + " threads");
         fixedPool = true;
         fService = Executors.newFixedThreadPool(totalThreads);
-        this.runnerInterceptor = new DelayedRunner( );
+        this.classRunnerInterceptor = this.methodRunnerInterceptor = new DelayedRunner( fService);
     }
 
     public void close(){
+        if (this.methodRunnerInterceptor instanceof ConcurrentRunnerInterceptorBase){
+            try {
+                ((ConcurrentRunnerInterceptorBase) methodRunnerInterceptor).done();
+            } catch (InterruptedException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+        }
         fService.shutdown();
     }
 
@@ -53,7 +61,7 @@ public class ConfigurableParallelComputer extends Computer {
         return new ConfigurableParallelComputer(false, true, numberOfThreads, perCore);
     }
 
-    private Runner parallelize(Runner runner) {
+    private Runner parallelize(Runner runner, RunnerInterceptor runnerInterceptor) {
         if (runner instanceof ParentRunner<?>) {
             ((ParentRunner<?>) runner).setRunnerInterceptor( runnerInterceptor);
         }
@@ -63,13 +71,13 @@ public class ConfigurableParallelComputer extends Computer {
     @Override
     public Runner getSuite(RunnerBuilder builder, java.lang.Class<?>[] classes) throws InitializationError {
         Runner suite = super.getSuite(builder, classes);
-        return fClasses ? parallelize(suite) : suite;
+        return fClasses ? parallelize(suite, classRunnerInterceptor) : suite;
     }
 
     @Override
     protected Runner getRunner(RunnerBuilder builder, Class<?> testClass) throws Throwable {
         Runner runner = super.getRunner(builder, testClass);
-        return fMethods ? parallelize(runner) : runner;
+        return fMethods ? parallelize(runner, methodRunnerInterceptor) : runner;
     }
 
 }

@@ -15,7 +15,7 @@ import java.util.ArrayList;
 * Time: 5:52:41 PM
 * To change this template use File | Settings | File Templates.
 */
-public class SingleExecutorServiceRunner implements RunnerInterceptor {
+public class SingleExecutorServiceRunner extends ConcurrentRunnerInterceptorBase implements RunnerInterceptor {
     private final ExecutorService fService;
     private final List<Future<Object>> fResults = new ArrayList<Future<Object>>();
 
@@ -35,20 +35,13 @@ public class SingleExecutorServiceRunner implements RunnerInterceptor {
 
     public void finished() {
         // DO nothin
-        for (Future<Object> each : fResults)
-            try {
-                each.get();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+//        for (Future<Object> each : fResults)
+ //           try {
+  //              each.get();
+    //        } catch (Exception e) {
+      //          e.printStackTrace();
+         //   }
     }
     public void done() {
-        // DO nothin
-        for (Future<Object> each : fResults)
-            try {
-                each.get();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
     }
 }

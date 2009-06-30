@@ -3,6 +3,9 @@ package org.junit.experimental;
 import org.junit.runners.model.RunnerInterceptor;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.ExecutionException;
 import java.util.List;
 import java.util.Collections;
 import java.util.ArrayList;
@@ -14,8 +17,13 @@ import java.util.ArrayList;
 * Time: 5:52:10 PM
 * To change this template use File | Settings | File Templates.
 */
-public class DelayedRunner implements RunnerInterceptor {
+public class DelayedRunner extends ConcurrentRunnerInterceptorBase implements RunnerInterceptor {
     private final List<Callable<Object>> fResults = Collections.synchronizedList(new ArrayList<Callable<Object>>());
+    private final ExecutorService fService;
+
+    public DelayedRunner(ExecutorService fService) {
+        this.fService = fService;
+    }
 
     public void runChild(final Runnable childStatement) {
         fResults.add(new Callable<Object>() {
@@ -29,4 +37,12 @@ public class DelayedRunner implements RunnerInterceptor {
 
     public void finished() {
     }
+
+    public void done() throws InterruptedException {
+        List<Future<Object>> futures = fService.invokeAll(fResults);
+        fService.shutdown();
+//        for (Future<Object> each : futures)
+//               each.get();
+    }
+
 }
