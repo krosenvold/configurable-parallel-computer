@@ -31,31 +31,14 @@ import org.junit.runner.Result;
  * @author <a href="mailto:kristian@zeniorD0Tno">Kristian Rosenvold</a>
  */
 public class JUnitCoreConcurrencyTes {
-
-	@Test
-	public void testFullTestRun() throws Exception {
-        final int NUMTESTS = 666;
-        List<Class> realClasses = new ArrayList<Class>();
-
-
-        Result result = new Result();
-        RunListener listener = result.createListener();
-
-        for (int i = 0; i < NUMTESTS; i ++){
-            realClasses.add( Dummy.class);
-        }
+    @Test
+   public void testOneMethod(){
         JUnitCore jUnitCore = new JUnitCore();
-        jUnitCore.addListener( listener);
+        Computer computer = new ConfigurableParallelComputer(true, true);
+        jUnitCore.run( computer, new Class[] { Dummy.class, Dummy.class, Dummy.class});
 
-        ConfigurableParallelComputer computer = new ConfigurableParallelComputer(true, false);
-        long start = System.currentTimeMillis();
-        jUnitCore.run(computer, realClasses.toArray(new Class[realClasses.size()]) );
-        computer.close();
-        System.out.println("elapsed " + (System.currentTimeMillis() - start));
-        assertEquals("No tests should fail, right ?",  0, result.getFailures().size());
-        assertEquals("All tests should succeed, right ?",  0, result.getIgnoreCount());
-        assertEquals("All tests should succeed, right ?",  NUMTESTS * 3, result.getRunCount());
     }
+
     @Test
     public void testFullTestRunAltConcurrency() throws Exception {
         final int NUMTESTS = 666;
@@ -80,14 +63,31 @@ public class JUnitCoreConcurrencyTes {
         assertEquals("All tests should succeed, right ?",  0, result.getIgnoreCount());
         assertEquals("All tests should succeed, right ?",  NUMTESTS * 3, result.getRunCount());
     }
+    @Test
+    public void testFullTestRun() throws Exception {
+        final int NUMTESTS = 666;
+        List<Class> realClasses = new ArrayList<Class>();
 
-     @Test
-    public void testOneMethod(){
-         JUnitCore jUnitCore = new JUnitCore();
-         Computer computer = new ConfigurableParallelComputer(true, true);
-         jUnitCore.run( computer, new Class[] { Dummy.class, Dummy.class, Dummy.class});
 
-     }
+        Result result = new Result();
+        RunListener listener = result.createListener();
+
+        for (int i = 0; i < NUMTESTS; i ++){
+            realClasses.add( Dummy.class);
+        }
+        JUnitCore jUnitCore = new JUnitCore();
+        jUnitCore.addListener( listener);
+
+        ConfigurableParallelComputer computer = new ConfigurableParallelComputer(true, false);
+        long start = System.currentTimeMillis();
+        jUnitCore.run(computer, realClasses.toArray(new Class[realClasses.size()]) );
+        computer.close();
+        System.out.println("elapsed " + (System.currentTimeMillis() - start));
+        assertEquals("No tests should fail, right ?",  0, result.getFailures().size());
+        assertEquals("All tests should succeed, right ?",  0, result.getIgnoreCount());
+        assertEquals("All tests should succeed, right ?",  NUMTESTS * 3, result.getRunCount());
+    }
+
 
 
 }

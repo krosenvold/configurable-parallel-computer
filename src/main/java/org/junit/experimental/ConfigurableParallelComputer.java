@@ -39,7 +39,8 @@ public class ConfigurableParallelComputer extends Computer {
         System.out.println("Created thread pool with " + totalThreads + " threads");
         fixedPool = true;
         fService = Executors.newFixedThreadPool(totalThreads);
-        this.classRunnerInterceptor = this.methodRunnerInterceptor = new DelayedRunner( fService);
+        this.methodRunnerInterceptor = new DelayedRunner( fService);
+        this.classRunnerInterceptor = new DelayedClassRunner();
     }
 
     public void close(){
