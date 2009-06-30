@@ -39,14 +39,13 @@ public class JUnitCoreConcurrencyTes {
         JUnitCore jUnitCore = new JUnitCore();
         Computer computer = new ConfigurableParallelComputer(true, true);
         jUnitCore.run( computer, new Class[] { Dummy.class, Dummy.class, Dummy.class});
-
     }
 
     @Test
     public void testSerial() throws Exception {
         Result result = new Result();
         Class[] realClasses = getClassList();
-        JUnitCore jUnitCore = getJunitCOre(result);
+        JUnitCore jUnitCore = getJunitCore(result);
         Computer computer = new Computer();
         timedRun(NUMTESTS, result, realClasses, jUnitCore, computer);
     }
@@ -55,7 +54,7 @@ public class JUnitCoreConcurrencyTes {
     public void testFullTestRunPC() throws Exception {
         Result result = new Result();
         Class[] realClasses = getClassList();
-        JUnitCore jUnitCore = getJunitCOre(result);
+        JUnitCore jUnitCore = getJunitCore(result);
         ParallelComputer computer = new ParallelComputer(true, true);
         timedRun(NUMTESTS, result, realClasses, jUnitCore, computer);
     }
@@ -64,9 +63,8 @@ public class JUnitCoreConcurrencyTes {
     public void testFixedThreadPool() throws Exception {
         Result result = new Result();
         Class[] realClasses = getClassList();
-        JUnitCore jUnitCore = getJunitCOre(result);
-
-        ConfigurableParallelComputer computer = new ConfigurableParallelComputer(false, true, 8, true);
+        JUnitCore jUnitCore = getJunitCore(result);
+        ConfigurableParallelComputer computer = new ConfigurableParallelComputer(false, true, 2, true);
         timedRun(NUMTESTS, result, realClasses, jUnitCore, computer);
     }
 
@@ -74,20 +72,21 @@ public class JUnitCoreConcurrencyTes {
     public void testClassesUnlimited() throws Exception {
         Result result = new Result();
         Class[] realClasses = getClassList();
-        JUnitCore jUnitCore = getJunitCOre(result);
+        JUnitCore jUnitCore = getJunitCore(result);
         ConfigurableParallelComputer computer = new ConfigurableParallelComputer(true, false);
         timedRun(NUMTESTS, result, realClasses, jUnitCore, computer);
     }
+
     @Test
     public void testBothUnlimited() throws Exception {
         Result result = new Result();
         Class[] realClasses = getClassList();
-        JUnitCore jUnitCore = getJunitCOre(result);
+        JUnitCore jUnitCore = getJunitCore(result);
         ConfigurableParallelComputer computer = new ConfigurableParallelComputer(true, true);
         timedRun(NUMTESTS, result, realClasses, jUnitCore, computer);
     }
 
-    private JUnitCore getJunitCOre(Result result) {
+    private JUnitCore getJunitCore(Result result) {
         RunListener listener = result.createListener();
         JUnitCore jUnitCore = new JUnitCore();
         jUnitCore.addListener( listener);
