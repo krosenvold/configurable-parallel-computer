@@ -16,7 +16,6 @@
             <url>http://www.apache.org</url>
         </license>
     </licenses>
-
     <build>
         <defaultGoal>install</defaultGoal>
         <plugins>
@@ -26,8 +25,6 @@
                     <source>1.5</source>
                     <target>1.5</target>
                 </configuration>
-
-
             </plugin>
         </plugins>
     </build>
@@ -50,20 +47,10 @@
             <artifactId>junit</artifactId>
             <version>4.7-SNAPSHOT</version>
         </dependency>
-
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
             <version>1.7</version>
         </dependency>
-
     </dependencies>
-
-    <properties>
-        <springframework.version>3.0.0.BUILD-SNAPSHOT</springframework.version>
-        <springframework.patched.version>3.0.0.BUILD1447</springframework.patched.version>
-        <servlet.version>2.4</servlet.version>
-        <jetty.version>6.1.14</jetty.version>
-        <jetty.port>8081</jetty.port>
-    </properties>
 </project>

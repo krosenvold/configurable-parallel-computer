@@ -93,8 +93,8 @@ public class ConfigurableParallelComputer extends Computer {
     @Override
     public String toString() {
         return "ConfigurableParallelComputer{" +
-                "fClasses=" + fClasses +
-                ", fMethods=" + fMethods +
+                "classes=" + fClasses +
+                ", methods=" + fMethods +
                 ", fixedPool=" + fixedPool +
                 '}';
     }
