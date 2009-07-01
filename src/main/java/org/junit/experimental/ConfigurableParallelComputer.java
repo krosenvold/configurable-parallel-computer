@@ -50,14 +50,14 @@ public class ConfigurableParallelComputer extends Computer {
             try {
                 ((ConcurrentRunnerInterceptorBase) methodRunnerInterceptor).done();
             } catch (InterruptedException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                e.printStackTrace();  
             }
         }
         if (this.classRunnerInterceptor instanceof ConcurrentRunnerInterceptorBase){
             try {
                 ((ConcurrentRunnerInterceptorBase) classRunnerInterceptor).done();
             } catch (InterruptedException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                e.printStackTrace();  
             }
         }
         fService.shutdown();
