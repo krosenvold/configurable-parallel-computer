@@ -27,7 +27,10 @@ public class ConfigurableParallelComputer extends Computer {
     public ConfigurableParallelComputer(boolean fClasses, boolean fMethods) {
         this.fClasses = fClasses;
         this.fMethods = fMethods;
-        System.out.println("Unlimited thread pool created");
+        if (fClasses || fMethods)
+            System.out.println("Unlimited thread pool created");
+        else
+            System.out.println("Single thread will be used");
         fixedPool = false;
         fService = Executors.newCachedThreadPool();
         this.classRunnerInterceptor = new SingleExecutorServiceRunner(fService);
