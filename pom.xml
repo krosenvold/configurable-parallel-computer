@@ -15,6 +15,10 @@
             <name>Apache 2.0</name>
             <url>http://www.apache.org</url>
         </license>
+        <license>
+            <name>CPL 1.0</name>
+            <url>http://junit.sourceforge.net/cpl-v10.htm</url>
+        </license>
     </licenses>
     <build>
         <defaultGoal>install</defaultGoal>
