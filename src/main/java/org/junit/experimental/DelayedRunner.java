@@ -1,14 +1,14 @@
 package org.junit.experimental;
 
-import org.junit.runners.model.RunnerInterceptor;
+import org.junit.runners.model.RunnerScheduler;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.ExecutionException;
-import java.util.List;
-import java.util.Collections;
-import java.util.ArrayList;
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 * Time: 5:52:10 PM
 * To change this template use File | Settings | File Templates.
 */
-public class DelayedRunner extends ConcurrentRunnerInterceptorBase implements RunnerInterceptor {
+public class DelayedRunner extends ConcurrentRunnerInterceptorBase implements RunnerScheduler {
     private final List<Callable<Object>> fResults = Collections.synchronizedList(new ArrayList<Callable<Object>>());
     private final ExecutorService fService;
 
@@ -25,7 +25,7 @@ public class DelayedRunner extends ConcurrentRunnerInterceptorBase implements Ru
         this.fService = fService;
     }
 
-    public void runChild(final Runnable childStatement) {
+    public void schedule(final Runnable childStatement) {
         fResults.add(new Callable<Object>() {
             public Object call() throws Exception {
                 childStatement.run();

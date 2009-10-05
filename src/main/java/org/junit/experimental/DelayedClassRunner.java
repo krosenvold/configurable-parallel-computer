@@ -1,10 +1,10 @@
 package org.junit.experimental;
 
-import org.junit.runners.model.RunnerInterceptor;
+import org.junit.runners.model.RunnerScheduler;
 
 
-public class DelayedClassRunner extends ConcurrentRunnerInterceptorBase implements RunnerInterceptor {
-    public void runChild(final Runnable childStatement) {
+public class DelayedClassRunner extends ConcurrentRunnerInterceptorBase implements RunnerScheduler {
+    public void schedule(final Runnable childStatement) {
         childStatement.run();
     }
 

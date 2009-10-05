@@ -9,15 +9,15 @@ import org.junit.runner.Runner;
 import org.junit.runners.ParentRunner;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
-import org.junit.runners.model.RunnerInterceptor;
+import org.junit.runners.model.RunnerScheduler;
 
 public class ConfigurableParallelComputer extends Computer {
     private final boolean fClasses;
     private final boolean fMethods;
     private final boolean fixedPool;
     private final ExecutorService fService;
-    private final RunnerInterceptor methodRunnerInterceptor;
-    private final RunnerInterceptor classRunnerInterceptor;
+    private final RunnerScheduler methodRunnerInterceptor;
+    private final RunnerScheduler classRunnerInterceptor;
 
 
     public ConfigurableParallelComputer() {
@@ -74,9 +74,9 @@ public class ConfigurableParallelComputer extends Computer {
         return new ConfigurableParallelComputer(false, true, numberOfThreads, perCore);
     }
 
-    private Runner parallelize(Runner runner, RunnerInterceptor runnerInterceptor) {
+    private Runner parallelize(Runner runner, RunnerScheduler runnerInterceptor) {
         if (runner instanceof ParentRunner<?>) {
-            ((ParentRunner<?>) runner).setRunnerInterceptor( runnerInterceptor);
+            ((ParentRunner<?>) runner).setScheduler( runnerInterceptor);
         }
         return runner;
     }

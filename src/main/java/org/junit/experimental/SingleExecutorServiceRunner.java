@@ -1,16 +1,11 @@
 package org.junit.experimental;
 
-import org.junit.runners.model.RunnerInterceptor;
+import org.junit.runners.model.RunnerScheduler;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-
-import com.sun.corba.se.impl.orbutil.concurrent.Sync;
 
 /**
  * Created by IntelliJ IDEA.
@@ -19,7 +14,7 @@ import com.sun.corba.se.impl.orbutil.concurrent.Sync;
 * Time: 5:52:41 PM
 * To change this template use File | Settings | File Templates.
 */
-public class SingleExecutorServiceRunner extends ConcurrentRunnerInterceptorBase implements RunnerInterceptor {
+public class SingleExecutorServiceRunner extends ConcurrentRunnerInterceptorBase implements RunnerScheduler {
     private final ExecutorService fService;
     private final ConcurrentLinkedQueue<Future<Object>> fResults = new ConcurrentLinkedQueue<Future<Object>>();
 
@@ -28,7 +23,7 @@ public class SingleExecutorServiceRunner extends ConcurrentRunnerInterceptorBase
     }
 
 
-    public void runChild(final Runnable childStatement) {
+    public void schedule(final Runnable childStatement) {
         fResults.add(fService.submit(new Callable<Object>() {
             public Object call() throws Exception {
                 childStatement.run();
