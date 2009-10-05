@@ -12,7 +12,10 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Also licensed under CPL http://junit.sourceforge.net/cpl-v10.html
  */
+
 
 package org.junit.experimental;
 
@@ -29,7 +32,7 @@ import org.junit.runner.Result;
 
 /**
  * Simple concurrency test of junit core.
- * @author <a href="mailto:kristian@zeniorD0Tno">Kristian Rosenvold</a>
+ * @author <a href="mailto:kristianAzeniorD0Tno">Kristian Rosenvold</a>
  */
 public class JUnitCoreConcurrencyTes {
     private static final int NUMTESTS = 1000;
