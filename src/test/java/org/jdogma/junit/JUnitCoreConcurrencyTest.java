@@ -112,7 +112,7 @@ public class JUnitCoreConcurrencyTest {
         if (computer instanceof ConfigurableParallelComputer){
              ((ConfigurableParallelComputer)computer).close();
         }
-        System.out.println(" elapsed " + (System.currentTimeMillis() - start) + "  for " + computer.toString());
+        System.out.println(" XelapsedX " + (System.currentTimeMillis() - start) + "  for " + computer.toString());
         assertEquals("No tests should fail, right ?",  0, result.getFailures().size());
         assertEquals("All tests should succeed, right ?",  0, result.getIgnoreCount());
         assertEquals("All tests should succeed, right ?",  NUMTESTS * 3, result.getRunCount());
