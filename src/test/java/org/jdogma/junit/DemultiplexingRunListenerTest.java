@@ -39,11 +39,12 @@ public class DemultiplexingRunListenerTest {
     public void testTestStarted() throws Exception {
         RunListener real = mock(RunListener.class);
         DemultiplexingRunListener listener = new DemultiplexingRunListener(real);
-        Description ruNDescr = Description.createSuiteDescription(DemultiplexingRunListenerTest.class);
+
+        Description testRunDescription = Description.createSuiteDescription(DemultiplexingRunListenerTest.class);
         Description description1 = Description.createTestDescription( DemultiplexingRunListenerTest.class, "testStub1");
         Description description2 = Description.createTestDescription( Dummy.class, "testStub2");
 
-        listener.testRunStarted(ruNDescr);
+        listener.testRunStarted(testRunDescription);
         listener.testStarted(description1);
         listener.testStarted(description2);
         listener.testFinished(description1);
@@ -55,37 +56,5 @@ public class DemultiplexingRunListenerTest {
         verify(real).testStarted( description1);
         verify(real).testRunStarted( description2);
         verify(real).testStarted( description2);
-
-      /*  JUnitCore jUnitCore = new JUnitCore();
-        jUnitCore.addListener( listener);
-
-        jUnitCore.run(new Class[] {DemultiplexingRunListenerTest.class});
-        */
-    }
-    @Test
-    public void testRegularJunitCoreRun() throws Exception {
-
-          TextListener real = new TextListener(System.out);
-        DemultiplexingRunListener listener = new DemultiplexingRunListener(real);
-        JUnitCore jUnitCore = new JUnitCore();
-        jUnitCore.addListener( listener);
-        jUnitCore.run(new Class[] {Dummy.class, Dummy2.class});
-    }
-
-    @Test
-    public void testRegularJunitCoreWithDiagnostics() throws Exception {
-        JUnitCore jUnitCore = new JUnitCore();
-        jUnitCore.addListener( new DiagnosticRunListener());
-        Computer computer = new ParallelComputer(true, true);
-        jUnitCore.run(computer, new Class[] {Dummy.class, Dummy2.class});
-    }
-
-    @Test
-    public void testStub1() {
-        // Add your code here
-    }
-    @Test
-    public void testStub2() {
-        // Add your code here
     }
 }

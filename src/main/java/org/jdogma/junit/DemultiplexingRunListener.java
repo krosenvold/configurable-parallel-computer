@@ -25,11 +25,14 @@ import org.junit.runner.Description;
 import org.junit.runner.Result;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Demultiplexes threaded running og tests into something that does not look threaded.
+ * Essentially makes a threaded junit core RunListener behave like something like a
+ * junit4 reporter can handle.
+ * The disadvantage of this demultiplexer is that there's no results being echoed to the
+ * console as tests are being run
+ * All results come like ketchup out of the bottle.
  * @author Kristian Rosenvold, kristianAzeniorD0Tno
  */
 public class DemultiplexingRunListener extends RunListener {
@@ -48,7 +51,7 @@ public class DemultiplexingRunListener extends RunListener {
     @Override
     public void testRunFinished(Result outerResult) throws Exception {
         for (RecordingRunListener classReport : classList.values()) {
-            classReport.replay( realtarget, true);
+            classReport.replay( realtarget);
         }
     }
 
@@ -96,61 +99,79 @@ public class DemultiplexingRunListener extends RunListener {
         }
         return result;
     }
-
-    /*
-        * @author Kristian Rosenvold, kristianAzeniorD0Tno
-        */
-    public static class ClassReport extends RunListener {
-        private final RunListener realtarget;
+    
+    public class RecordingRunListener extends RunListener {
+        private volatile Description testRunStarted;
+        private final List<Description> testStarted = Collections.synchronizedList(new ArrayList<Description>());
+        private final List<Description> testFinished =  Collections.synchronizedList(new ArrayList<Description>());
+        private final List<Failure> testFailure =  Collections.synchronizedList(new ArrayList<Failure>());
+        private final List<Failure> testAssumptionFailure =  Collections.synchronizedList(new ArrayList<Failure>());
+        private final List<Description> testIgnored =  Collections.synchronizedList(new ArrayList<Description>());
         private final Result resultForThisClass = new Result();
         private final RunListener classRunListener = resultForThisClass.createListener();
 
-        public ClassReport(RunListener realtarget) {
-            this.realtarget = realtarget;
+
+
+        @Override
+        public void testRunStarted(Description description) throws Exception {
+            this.testRunStarted = description;
         }
 
         @Override
         public void testRunFinished(Result result) throws Exception {
-            realtarget.testRunFinished( result);
-            classRunListener.testRunFinished( result);
+            throw new IllegalStateException("This method should not be called on the recorder");
         }
 
         @Override
         public void testStarted(Description description) throws Exception {
-            realtarget.testStarted(description);
+            testStarted.add( description);
             classRunListener.testStarted( description);
         }
 
         @Override
         public void testFinished(Description description) throws Exception {
-            realtarget.testFinished(description);
-            classRunListener.testFinished( description);
+            testFinished.add( description);
+            classRunListener.testFinished(description);
         }
 
         @Override
         public void testFailure(Failure failure) throws Exception {
-            realtarget.testFailure(failure);
+            testFailure.add( failure);
             classRunListener.testFailure( failure);
         }
 
         @Override
         public void testAssumptionFailure(Failure failure) {
-            realtarget.testAssumptionFailure(failure);
-            classRunListener.testAssumptionFailure( failure);
+            testAssumptionFailure.add( failure);
         }
 
         @Override
         public void testIgnored(Description description) throws Exception {
-            realtarget.testIgnored(description);
-            classRunListener.testIgnored( description);
+            testIgnored.add(  description);
         }
 
-        public void testRunFinished() throws Exception {
-            realtarget.testRunFinished(resultForThisClass);
+        public void replay(RunListener target) throws Exception {
+            target.testRunStarted (testRunStarted);
+
+            for( Description description : testStarted) {
+                target.testStarted( description);
+            }
+            for( Failure failure : testFailure) {
+                target.testFailure( failure);
+            }
+            for( Description description : testIgnored) {
+                target.testIgnored( description);
+            }
+            for( Failure failure : testAssumptionFailure) {
+                target.testAssumptionFailure( failure);
+            }
+            for( Description description : testFinished) {
+                target.testFinished( description);
+            }
+            target.testRunFinished( resultForThisClass);
         }
 
-        Result getResultForThisClass() {
-            return resultForThisClass;
-        }
+
     }
+
 }
