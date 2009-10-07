@@ -36,7 +36,7 @@ import org.jdogma.junit.ConfigurableParallelComputer;
  * Simple concurrency test of junit core.
  * @author <a href="mailto:kristianAzeniorD0Tno">Kristian Rosenvold</a>
  */
-public class JUnitCoreConcurrencyTes {
+public class JUnitCoreConcurrencyTest {
     private static final int NUMTESTS = 1000;
 
     @Test

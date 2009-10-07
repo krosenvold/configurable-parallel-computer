@@ -20,10 +20,12 @@
 package org.jdogma.junit;
 
 import org.junit.Test;
+import org.junit.experimental.ParallelComputer;
 import org.junit.internal.TextListener;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
+import org.junit.runner.Computer;
 import org.junit.runner.notification.RunListener;
 import static org.mockito.Mockito.*;
 import org.jdogma.junit.DemultiplexingRunListener;
@@ -53,8 +55,7 @@ public class DemultiplexingRunListenerTest {
         verify(real).testStarted( description1);
         verify(real).testRunStarted( description2);
         verify(real).testStarted( description2);
-        verify(real).testRunFinished( listener.getClassReport( description1).getResultForThisClass());
-        verify(real).testRunFinished( listener.getClassReport( description2).getResultForThisClass());
+
       /*  JUnitCore jUnitCore = new JUnitCore();
         jUnitCore.addListener( listener);
 
@@ -68,7 +69,15 @@ public class DemultiplexingRunListenerTest {
         DemultiplexingRunListener listener = new DemultiplexingRunListener(real);
         JUnitCore jUnitCore = new JUnitCore();
         jUnitCore.addListener( listener);
-        jUnitCore.run(new Class[] {Dummy.class});
+        jUnitCore.run(new Class[] {Dummy.class, Dummy2.class});
+    }
+
+    @Test
+    public void testRegularJunitCoreWithDiagnostics() throws Exception {
+        JUnitCore jUnitCore = new JUnitCore();
+        jUnitCore.addListener( new DiagnosticRunListener());
+        Computer computer = new ParallelComputer(true, true);
+        jUnitCore.run(computer, new Class[] {Dummy.class, Dummy2.class});
     }
 
     @Test

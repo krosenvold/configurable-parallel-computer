@@ -24,18 +24,14 @@ import org.junit.Test;
  * @author Kristian Rosenvold, kristianAzeniorD0Tno
  */
 
-public class Dummy {
+public class Dummy2 {
     @Test
     public void testNotMuch(){
-        
+
     }
 
-        @Test
-    public void testStub1() {
+    @Test
+    public void testDummy2() {
         // Add your code here
     }
-    @Test
-public void testStub2() {
-    // Add your code here
-}
 }

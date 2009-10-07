@@ -23,6 +23,11 @@ import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 /*
  * @author Kristian Rosenvold, kristianAzeniorD0Tno
  */
@@ -30,11 +35,14 @@ import org.junit.runner.Result;
 public class RecordingRunListener extends RunListener {
     private volatile Description testRunStarted;
     private volatile Result testRunFinished;
-    private volatile Description testStarted;
-    private volatile Description testFinished;
-    private volatile Failure testFailure;
-    private volatile Failure testAssumptionFailure;
-    private volatile Description testIgnored;
+    private volatile List<Description> testStarted = Collections.synchronizedList(new ArrayList<Description>());
+    private volatile List<Description> testFinished =  Collections.synchronizedList(new ArrayList<Description>());
+    private volatile List<Failure> testFailure =  Collections.synchronizedList(new ArrayList<Failure>());
+    private volatile List<Failure> testAssumptionFailure =  Collections.synchronizedList(new ArrayList<Failure>());
+    private volatile List<Description> testIgnored =  Collections.synchronizedList(new ArrayList<Description>());
+    private final Result resultForThisClass = new Result();
+    private final RunListener classRunListener = resultForThisClass.createListener();
+
 
 
     @Override
@@ -49,37 +57,52 @@ public class RecordingRunListener extends RunListener {
 
     @Override
     public void testStarted(Description description) throws Exception {
-        testStarted = description;
+        testStarted.add( description);
+        classRunListener.testStarted( description);
     }
 
     @Override
     public void testFinished(Description description) throws Exception {
-        testFinished = description;
+        testFinished.add( description);
+        classRunListener.testFinished(description);
     }
 
     @Override
     public void testFailure(Failure failure) throws Exception {
-        testFailure = failure;
+        testFailure.add( failure);
+        classRunListener.testFailure( failure);
     }
 
     @Override
     public void testAssumptionFailure(Failure failure) {
-        testAssumptionFailure = failure;
+        testAssumptionFailure.add( failure);
     }
 
     @Override
     public void testIgnored(Description description) throws Exception {
-        testIgnored = description;
+        testIgnored.add(  description);
     }
 
     public void replay(RunListener target, boolean includeRunEvents) throws Exception {
         if (testRunStarted != null && includeRunEvents) target.testRunStarted (testRunStarted);
-        if (testStarted != null) target.testStarted( testStarted);
-        if (testFailure != null) target.testFailure( testFailure);
-        if (testIgnored != null) target.testIgnored( testIgnored);
-        if (testAssumptionFailure != null) target.testAssumptionFailure( testAssumptionFailure);
-        if (testFinished != null) target.testFinished( testFinished);
-        if (testRunFinished != null && includeRunEvents) target.testRunFinished( testRunFinished);
+
+        for( Description description : testStarted) {
+            target.testStarted( description);
+        }
+        for( Failure failure : testFailure) {
+            target.testFailure( failure);
+        }
+        for( Description description : testIgnored) {
+            target.testIgnored( description);
+        }
+        for( Failure failure : testAssumptionFailure) {
+            target.testAssumptionFailure( failure);
+        }
+        for( Description description : testFinished) {
+            target.testFinished( description);
+        }
+        target.testRunFinished( resultForThisClass);
     }
+
 
 }

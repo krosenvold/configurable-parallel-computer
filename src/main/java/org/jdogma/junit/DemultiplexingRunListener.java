@@ -25,13 +25,15 @@ import org.junit.runner.Description;
 import org.junit.runner.Result;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Demultiplexes threaded running og tests into something that does not look threaded.
  * @author Kristian Rosenvold, kristianAzeniorD0Tno
  */
 public class DemultiplexingRunListener extends RunListener {
-    private final Map<String, ClassReport> classList = new HashMap<String, ClassReport>();
+    private final Map<String, RecordingRunListener> classList = new HashMap<String, RecordingRunListener>();
     private final RunListener realtarget;
 
     public DemultiplexingRunListener(RunListener realtarget) {
@@ -45,21 +47,19 @@ public class DemultiplexingRunListener extends RunListener {
 
     @Override
     public void testRunFinished(Result outerResult) throws Exception {
-        for (ClassReport classReport : classList.values()) {
-            classReport.testRunFinished();
+        for (RecordingRunListener classReport : classList.values()) {
+            classReport.replay( realtarget, true);
         }
     }
 
     @Override
     public void testStarted(Description description) throws Exception {
-        RunListener classReport = getOrCreateClassReport(description);
-        classReport.testStarted( description);
+        getOrCreateClassReport(description).testStarted( description);
     }
 
     @Override
     public void testFinished(Description description) throws Exception {
-        RunListener classReport = getClassReport( description);
-        classReport.testFinished( description);
+        getClassReport( description).testFinished(description);
     }
 
     @Override
@@ -78,31 +78,24 @@ public class DemultiplexingRunListener extends RunListener {
     }
 
 
-    ClassReport getClassReport(Description description) {
-        ClassReport result;
-        synchronized (classList) {
-            result = innerGetClassReport(description.getClassName());
+    RecordingRunListener getClassReport(Description description) {
+        synchronized ( classList){
+          return classList.get( description.getClassName());
         }
-        return result;
     }
 
-    private ClassReport getOrCreateClassReport(Description description) throws Exception {
-        ClassReport result;
+    private RecordingRunListener getOrCreateClassReport(Description description) throws Exception {
+        RecordingRunListener result;
         synchronized (classList) {
-            result = innerGetClassReport(description.getClassName());
+            result = classList.get(description.getClassName());
             if (result == null) {
-                realtarget.testRunStarted( description);
-                result = new ClassReport(realtarget);
+                result = new RecordingRunListener();
+                result.testRunStarted( description);
                 classList.put(description.getClassName(), result);
             }
         }
         return result;
     }
-
-    private ClassReport innerGetClassReport(String className) {
-        return classList.get(className);
-    }
-
 
     /*
         * @author Kristian Rosenvold, kristianAzeniorD0Tno
