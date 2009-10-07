@@ -35,11 +35,11 @@ import java.util.Collections;
 public class RecordingRunListener extends RunListener {
     private volatile Description testRunStarted;
     private volatile Result testRunFinished;
-    private volatile List<Description> testStarted = Collections.synchronizedList(new ArrayList<Description>());
-    private volatile List<Description> testFinished =  Collections.synchronizedList(new ArrayList<Description>());
-    private volatile List<Failure> testFailure =  Collections.synchronizedList(new ArrayList<Failure>());
-    private volatile List<Failure> testAssumptionFailure =  Collections.synchronizedList(new ArrayList<Failure>());
-    private volatile List<Description> testIgnored =  Collections.synchronizedList(new ArrayList<Description>());
+    private final List<Description> testStarted = Collections.synchronizedList(new ArrayList<Description>());
+    private final List<Description> testFinished =  Collections.synchronizedList(new ArrayList<Description>());
+    private final List<Failure> testFailure =  Collections.synchronizedList(new ArrayList<Failure>());
+    private final List<Failure> testAssumptionFailure =  Collections.synchronizedList(new ArrayList<Failure>());
+    private final List<Description> testIgnored =  Collections.synchronizedList(new ArrayList<Description>());
     private final Result resultForThisClass = new Result();
     private final RunListener classRunListener = resultForThisClass.createListener();
 

@@ -23,52 +23,100 @@ import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
+
+import java.util.concurrent.atomic.AtomicInteger;
 /*
  * @author Kristian Rosenvold, kristianAzeniorD0Tno
  */
 
 public class DiagnosticRunListener extends RunListener {
+    private final AtomicInteger numTestStarted = new  AtomicInteger();
+    private final AtomicInteger numTestFailed = new  AtomicInteger();
+    private final AtomicInteger numTestAssumptionsFailed = new  AtomicInteger();
+    private final AtomicInteger numTestFinished = new  AtomicInteger();
+    private final AtomicInteger numTestIgnored = new  AtomicInteger();
+    private final boolean printToConsole;
+    private final RunListener target;
+
     private void print(String event, Description description) {
-        System.out.println(Thread.currentThread().toString() +  ", event = " + event + ", " + description.toString());
+        if (printToConsole) System.out.println(Thread.currentThread().toString() +  ", event = " + event + ", " + description.toString());
     }
     private void print(String event, Result description) {
-        System.out.println(Thread.currentThread().toString() +  ", event = " + event + ", " + description.toString());
+        if (printToConsole) System.out.println(Thread.currentThread().toString() +  ", event = " + event + ", " + description.toString());
     }
     private void print(String event, Failure description) {
-        System.out.println(Thread.currentThread().toString() +  ", event = " + event + ", " + description.toString());
+        if (printToConsole) System.out.println(Thread.currentThread().toString() +  ", event = " + event + ", " + description.toString());
     }
+
+    public DiagnosticRunListener(boolean printToConsole, RunListener target) {
+        this.printToConsole = printToConsole;
+        this.target = target;
+    }
+
+    public DiagnosticRunListener(boolean printToConsole) {
+        this( printToConsole, null);
+    }
+
+    public DiagnosticRunListener() {
+        this(true);
+    }
+
     @Override
     public void testRunStarted(Description description) throws Exception {
         print("testRunStarted", description);
+        if (target != null) target.testRunStarted( description);
     }
 
     @Override
     public void testRunFinished(Result result) throws Exception {
         print("testRunStarted", result);
+        if (target != null) target.testRunFinished( result);
+
     }
 
     @Override
     public void testStarted(Description description) throws Exception {
+        numTestStarted.incrementAndGet();
         print("testStarted", description);
+        if (target != null) target.testStarted( description);
     }
 
     @Override
     public void testFinished(Description description) throws Exception {
+        numTestFinished.incrementAndGet();
         print("testFinished", description);
+        if (target != null) target.testFinished( description);
     }
 
     @Override
     public void testFailure(Failure failure) throws Exception {
+        numTestFailed.incrementAndGet();
         print("testFailure", failure);
+        if (target != null) target.testFailure(  failure);
     }
 
     @Override
     public void testAssumptionFailure(Failure failure) {
+        numTestAssumptionsFailed.incrementAndGet();
         print("testAssumptionFailure", failure);
+        if (target != null) target.testAssumptionFailure(  failure);
     }
 
     @Override
     public void testIgnored(Description description) throws Exception {
+        numTestIgnored.incrementAndGet();
         print("testIgnored", description);
+        if (target != null) target.testIgnored( description);
+    }
+
+    @Override
+    public String toString() {
+        return "DiagnosticRunListener{" +
+                "numTestIgnored=" + numTestIgnored +
+                ", numTestStarted=" + numTestStarted +
+                ", numTestFailed=" + numTestFailed +
+                ", numTestAssumptionsFailed=" + numTestAssumptionsFailed +
+                ", numTestFinished=" + numTestFinished +
+                '}';
     }
 }

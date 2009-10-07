@@ -86,13 +86,21 @@ public class JUnitCoreConcurrencyTest {
     public void testBothUnlimited() throws Exception {
         Result result = new Result();
         Class[] realClasses = getClassList();
-        JUnitCore jUnitCore = getJunitCore(result);
+        DiagnosticRunListener diagnosticRunListener = new DiagnosticRunListener(false, result.createListener());
+        JUnitCore jUnitCore = getJunitCore(result, diagnosticRunListener);
+        // TODO: There seems to be a concurrency issue here that pops up sometimes on c2d, but never on i7
         ConfigurableParallelComputer computer = new ConfigurableParallelComputer(true, true);
         timedRun(NUMTESTS, result, realClasses, jUnitCore, computer);
+        System.out.println("diagnosticRunListener = " + diagnosticRunListener);
     }
 
     private JUnitCore getJunitCore(Result result) {
         RunListener listener = result.createListener();
+        JUnitCore jUnitCore = new JUnitCore();
+        jUnitCore.addListener( listener);
+        return jUnitCore;
+    }
+    private JUnitCore getJunitCore(Result result, RunListener listener) {
         JUnitCore jUnitCore = new JUnitCore();
         jUnitCore.addListener( listener);
         return jUnitCore;
