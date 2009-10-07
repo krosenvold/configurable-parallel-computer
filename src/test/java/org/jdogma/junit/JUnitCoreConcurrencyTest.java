@@ -40,7 +40,7 @@ public class JUnitCoreConcurrencyTest {
     private static final int NUMTESTS = 1000;
 
     @Test
-   public void testOneMethod(){
+    public void testOneMethod(){
         JUnitCore jUnitCore = new JUnitCore();
         Computer computer = new ConfigurableParallelComputer(true, true);
         jUnitCore.run( computer, new Class[] { Dummy.class, Dummy.class, Dummy.class});
