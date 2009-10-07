@@ -17,18 +17,16 @@
  */
 
 
-package org.junit.experimental;
+package org.jdogma.junit;
 
 import org.junit.Test;
 import org.junit.internal.TextListener;
 import org.junit.runner.JUnitCore;
-import org.junit.runner.Computer;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.RunListener;
 import static org.mockito.Mockito.*;
-
-import java.util.List;
+import org.jdogma.junit.DemultiplexingRunListener;
 
 /*
  * @author Kristian Rosenvold, kristianAzeniorD0Tno
@@ -37,7 +35,6 @@ import java.util.List;
 public class DemultiplexingRunListenerTest {
     @Test
     public void testTestStarted() throws Exception {
-
         RunListener real = mock(RunListener.class);
         DemultiplexingRunListener listener = new DemultiplexingRunListener(real);
         Description ruNDescr = Description.createSuiteDescription(DemultiplexingRunListenerTest.class);
@@ -63,7 +60,6 @@ public class DemultiplexingRunListenerTest {
 
         jUnitCore.run(new Class[] {DemultiplexingRunListenerTest.class});
         */
-        // Add your code here
     }
     @Test
     public void testRegularJunitCoreRun() throws Exception {

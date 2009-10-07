@@ -17,25 +17,23 @@
  */
 
 
-package org.junit.experimental;
+package org.jdogma.junit;
 
-import org.junit.Test;
+import org.junit.runners.model.RunnerScheduler;
+
 /*
  * @author Kristian Rosenvold, kristianAzeniorD0Tno
  */
-
-public class Dummy {
-    @Test
-    public void testNotMuch(){
-        
+public class DelayedClassRunner extends ConcurrentRunnerInterceptorBase implements RunnerScheduler {
+    public void schedule(final Runnable childStatement) {
+        childStatement.run();
     }
 
-        @Test
-    public void testStub1() {
-        // Add your code here
+    public void finished() {
     }
-    @Test
-    public void testStub2() {
-        // Add your code here
+
+    public void done() throws InterruptedException {
     }
+
 }
+

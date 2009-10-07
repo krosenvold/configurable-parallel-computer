@@ -17,7 +17,7 @@
  */
 
 
-package org.junit.experimental;
+package org.jdogma.junit;
 
 import java.util.concurrent.ExecutionException;
 

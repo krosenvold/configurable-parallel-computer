@@ -17,18 +17,20 @@
  */
 
 
-package org.junit.experimental;
+package org.jdogma.junit;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
 import org.junit.Test;
+import org.junit.experimental.ParallelComputer;
 import static org.junit.Assert.*;
 import org.junit.runner.notification.RunListener;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Computer;
 import org.junit.runner.Result;
+import org.jdogma.junit.ConfigurableParallelComputer;
 
 /**
  * Simple concurrency test of junit core.

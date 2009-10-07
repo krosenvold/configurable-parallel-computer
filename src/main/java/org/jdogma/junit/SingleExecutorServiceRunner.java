@@ -17,49 +17,46 @@
  */
 
 
-
-package org.junit.experimental;
+package org.jdogma.junit;
 
 import org.junit.runners.model.RunnerScheduler;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /*
  * @author Kristian Rosenvold, kristianAzeniorD0Tno
  */
 
-public class DelayedRunner extends ConcurrentRunnerInterceptorBase implements RunnerScheduler {
-    private final List<Callable<Object>> fResults = Collections.synchronizedList(new ArrayList<Callable<Object>>());
+public class SingleExecutorServiceRunner extends ConcurrentRunnerInterceptorBase implements RunnerScheduler {
     private final ExecutorService fService;
+    private final ConcurrentLinkedQueue<Future<Object>> fResults = new ConcurrentLinkedQueue<Future<Object>>();
 
-    public DelayedRunner(ExecutorService fService) {
+    SingleExecutorServiceRunner(ExecutorService fService) {
         this.fService = fService;
     }
 
+
     public void schedule(final Runnable childStatement) {
-        fResults.add(new Callable<Object>() {
+        fResults.add(fService.submit(new Callable<Object>() {
             public Object call() throws Exception {
                 childStatement.run();
                 return null;
             }
-        });
+        }));
     }
-
 
     public void finished() {
+        // DO nothin
     }
-
-    public void done() throws InterruptedException, ExecutionException {
-        List<Future<Object>> futures = fService.invokeAll(fResults);
-        for (Future<Object> each : futures)
-               each.get();
-        fService.shutdown();
+    public void done() {
+        for (Future<Object> each : fResults)
+            try {
+                each.get();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
     }
-
 }
