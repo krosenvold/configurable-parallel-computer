@@ -81,6 +81,11 @@ public class ConfigurableParallelComputer extends Computer {
             }
         }
         fService.shutdown();
+        try {
+        fService.awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS);
+        } catch (InterruptedException e){
+            throw new RuntimeException(e);
+        }
     }
 
     public static Computer classes(Integer numberOfThreads, boolean perCore) {
