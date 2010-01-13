@@ -19,6 +19,8 @@
 
 package org.jdogma.junit;
 
+import org.junit.runner.Runner;
+import org.junit.runners.ParentRunner;
 import org.junit.runners.model.RunnerScheduler;
 
 import java.util.concurrent.ExecutorService;
@@ -40,6 +42,12 @@ public class SingleExecutorServiceRunner extends ConcurrentRunnerInterceptorBase
 
 
     public void schedule(final Runnable childStatement) {
+        if (childStatement instanceof Runner){
+            Runner parentRunner = (Runner) childStatement;
+            System.out.println("parentRunner = " + parentRunner);
+
+        }
+
         fResults.add(fService.submit(new Callable<Object>() {
             public Object call() throws Exception {
                 childStatement.run();
@@ -50,7 +58,7 @@ public class SingleExecutorServiceRunner extends ConcurrentRunnerInterceptorBase
 
     public void finished() {
         // DO nothin
-    }
+        }
     public void done() {
         for (Future<Object> each : fResults)
             try {

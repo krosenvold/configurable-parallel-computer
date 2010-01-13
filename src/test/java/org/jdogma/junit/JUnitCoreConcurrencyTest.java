@@ -40,6 +40,19 @@ public class JUnitCoreConcurrencyTest {
     private static final int NUMTESTS = 1000;
 
     @Test
+    public void testAnythingYouWantToPlayWith() throws Exception { 
+        Result result = new Result();
+        Class[] realClasses = new Class[]  {Dummy.class, Dummy2.class};
+        
+        DiagnosticRunListener diagnosticRunListener = new DiagnosticRunListener(true, result.createListener());
+        JUnitCore jUnitCore = getJunitCore(result, diagnosticRunListener);
+        ConfigurableParallelComputer computer = new ConfigurableParallelComputer(true, true);
+        jUnitCore.run(computer, realClasses);
+        computer.close();
+        assertEquals("All tests should succeed, right ?",  5, result.getRunCount());
+    }
+
+    @Test
     public void testOneMethod(){
         JUnitCore jUnitCore = new JUnitCore();
         Computer computer = new ConfigurableParallelComputer(true, true);

@@ -27,15 +27,15 @@ import org.junit.Test;
 public class Dummy {
     @Test
     public void testNotMuch(){
-        
     }
 
-        @Test
+    @Test
     public void testStub1() {
         // Add your code here
     }
+    
     @Test
-public void testStub2() {
-    // Add your code here
-}
+    public void testStub2() {
+        // Add your code here
+    }
 }
