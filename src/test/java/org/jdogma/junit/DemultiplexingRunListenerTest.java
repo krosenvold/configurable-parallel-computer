@@ -20,15 +20,15 @@
 package org.jdogma.junit;
 
 import org.junit.Test;
-import org.junit.experimental.ParallelComputer;
-import org.junit.internal.TextListener;
-import org.junit.runner.JUnitCore;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
-import org.junit.runner.Computer;
 import org.junit.runner.notification.RunListener;
-import static org.mockito.Mockito.*;
-import org.jdogma.junit.DemultiplexingRunListener;
+
+import java.util.Map;
+
+import static junit.framework.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 /*
  * @author Kristian Rosenvold, kristianAzeniorD0Tno
@@ -43,6 +43,8 @@ public class DemultiplexingRunListenerTest {
         Description testRunDescription = Description.createSuiteDescription(DemultiplexingRunListenerTest.class);
         Description description1 = Description.createTestDescription( DemultiplexingRunListenerTest.class, "testStub1");
         Description description2 = Description.createTestDescription( Dummy.class, "testStub2");
+        testRunDescription.addChild( description1);
+        testRunDescription.addChild( description2);
 
         listener.testRunStarted(testRunDescription);
         listener.testStarted(description1);
@@ -56,5 +58,22 @@ public class DemultiplexingRunListenerTest {
         verify(real).testStarted( description1);
         verify(real).testRunStarted( description2);
         verify(real).testStarted( description2);
+    }
+
+    @Test
+    public void testCreateAnnotatedDescriptions(){
+        Description testRunDescription = Description.createSuiteDescription(DemultiplexingRunListenerTest.class);
+        Description description1 = Description.createTestDescription( DemultiplexingRunListenerTest.class, "testStub1");
+        Description description2 = Description.createTestDescription( Dummy.class, "testStub2");
+        testRunDescription.addChild( description1);
+        testRunDescription.addChild( description2);
+
+        final Map<String,DemultiplexingRunListener.AnnotatedDescription> map = DemultiplexingRunListener.createAnnotatedDescriptions(testRunDescription);
+        assertNotNull( map);
+
+        DemultiplexingRunListener.AnnotatedDescription annotatedDescription1 = map.get(description1.getDisplayName());
+        assertFalse( annotatedDescription1.setDone());
+        DemultiplexingRunListener.AnnotatedDescription annotatedDescription2 = map.get(description2.getDisplayName());
+        assertTrue( annotatedDescription2.setDone());
     }
 }

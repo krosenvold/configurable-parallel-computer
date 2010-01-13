@@ -25,11 +25,13 @@ import org.junit.runner.Description;
 import org.junit.runner.Result;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Demultiplexes threaded running og tests into something that does not look threaded.
  * Essentially makes a threaded junit core RunListener behave like something like a
  * junit4 reporter can handle.
+ *
  * The disadvantage of this demultiplexer is that there's no results being echoed to the
  * console as tests are being run
  * All results come like ketchup out of the bottle.
@@ -39,13 +41,16 @@ public class DemultiplexingRunListener extends RunListener {
     private final Map<String, RecordingRunListener> classList = new HashMap<String, RecordingRunListener>();
     private final RunListener realtarget;
 
+    private volatile Description rootDescription;
+    private volatile Map<String, AnnotatedDescription> annotatedDescriptionMap;
+
     public DemultiplexingRunListener(RunListener realtarget) {
         this.realtarget = realtarget;
     }
 
     @Override
     public void testRunStarted(Description description) throws Exception {
-        // Do nothing. We discard this event because it's basically meaningless
+        annotatedDescriptionMap = createAnnotatedDescriptions( description);
     }
 
     @Override
@@ -86,6 +91,49 @@ public class DemultiplexingRunListener extends RunListener {
           return classList.get( description.getClassName());
         }
     }
+
+    static Map<String, AnnotatedDescription> createAnnotatedDescriptions(Description description){
+        Map<String, AnnotatedDescription> result = new HashMap<String, AnnotatedDescription>();
+        createAnnotatedDescriptions( description, result, null);
+        return result;
+    }
+
+    private static void createAnnotatedDescriptions(Description description, Map<String, AnnotatedDescription> result, AnnotatedDescription parent){
+        final ArrayList<Description> children = description.getChildren();
+        AnnotatedDescription current = new AnnotatedDescription( parent, description, children.size());
+        if ( description.getDisplayName() != null)
+            result.put( description.getDisplayName(), current);
+
+        for( Description item : children){
+            createAnnotatedDescriptions( item, result, current);
+        }
+    }
+
+    static class AnnotatedDescription {
+        private final AnnotatedDescription parent;
+        private final Description description;
+        private final int numChildren;
+        private volatile boolean done = false;
+        private AtomicInteger numberOfCompletedChildren = new AtomicInteger(0);
+
+
+        AnnotatedDescription(AnnotatedDescription parent, Description description, int numChildren) {
+            this.parent = parent;
+            this.description = description;
+            this.numChildren = numChildren;
+        }
+
+        boolean incrementCompletedChildrenCount(){
+            return numChildren == numberOfCompletedChildren.incrementAndGet();
+
+        }
+
+        boolean setDone(){
+            return parent.incrementCompletedChildrenCount();
+        }
+
+    }
+
 
     private RecordingRunListener getOrCreateClassReport(Description description) throws Exception {
         RecordingRunListener result;
