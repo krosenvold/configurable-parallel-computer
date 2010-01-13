@@ -88,7 +88,6 @@ public class JUnitCoreConcurrencyTest {
         Class[] realClasses = getClassList();
         DiagnosticRunListener diagnosticRunListener = new DiagnosticRunListener(false, result.createListener());
         JUnitCore jUnitCore = getJunitCore(result, diagnosticRunListener);
-        // TODO: There seems to be a concurrency issue here that pops up sometimes on c2d, but never on i7
         ConfigurableParallelComputer computer = new ConfigurableParallelComputer(true, true);
         timedRun(NUMTESTS, result, realClasses, jUnitCore, computer);
         System.out.println("diagnosticRunListener = " + diagnosticRunListener);
