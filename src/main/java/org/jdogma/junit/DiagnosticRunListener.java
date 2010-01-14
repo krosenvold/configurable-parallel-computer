@@ -39,13 +39,13 @@ public class DiagnosticRunListener extends RunListener {
     private final RunListener target;
 
     private void print(String event, Description description) {
-        if (printToConsole) System.out.println(Thread.currentThread().toString() +  ", event = " + event + ", " + description.toString());
+        if (printToConsole) System.out.println(Thread.currentThread().toString() +  ", event = " + event + ", " + description);
     }
     private void print(String event, Result description) {
-        if (printToConsole) System.out.println(Thread.currentThread().toString() +  ", event = " + event + ", " + description.toString());
+        if (printToConsole) System.out.println(Thread.currentThread().toString() +  ", event = " + event + ", " + description);
     }
     private void print(String event, Failure description) {
-        if (printToConsole) System.out.println(Thread.currentThread().toString() +  ", event = " + event + ", " + description.toString());
+        if (printToConsole) System.out.println(Thread.currentThread().toString() +  ", event = " + event + ", " + description);
     }
 
     public DiagnosticRunListener(boolean printToConsole, RunListener target) {

@@ -27,7 +27,7 @@ import org.junit.runner.notification.RunListener;
 import java.util.Map;
 
 import static junit.framework.Assert.*;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verify;
 
 /*
@@ -35,45 +35,91 @@ import static org.mockito.Mockito.verify;
  */
 
 public class DemultiplexingRunListenerTest {
+
+    class RootSuite {
+        
+    }
+
     @Test
     public void testTestStarted() throws Exception {
         RunListener real = mock(RunListener.class);
+
+        //DiagnosticRunListener diagnosticRunListener = new DiagnosticRunListener();
         DemultiplexingRunListener listener = new DemultiplexingRunListener(real);
 
-        Description testRunDescription = Description.createSuiteDescription(DemultiplexingRunListenerTest.class);
-        Description description1 = Description.createTestDescription( DemultiplexingRunListenerTest.class, "testStub1");
-        Description description2 = Description.createTestDescription( Dummy.class, "testStub2");
-        testRunDescription.addChild( description1);
-        testRunDescription.addChild( description2);
 
-        listener.testRunStarted(testRunDescription);
-        listener.testStarted(description1);
-        listener.testStarted(description2);
-        listener.testFinished(description1);
-        listener.testFinished(description2);
+        Description rootSuite = Description.createSuiteDescription(RootSuite.class);
+        Description testClass1 = Description.createSuiteDescription(Dummy.class);
+        Description testClass2 = Description.createSuiteDescription(Dummy2.class);
+        rootSuite.addChild( testClass1);
+        rootSuite.addChild( testClass2);
+
+        Description testMethod1_1 = getDescription1_1();
+        Description testMethod1_2 = getDescription1_2();
+        testClass1.addChild( testMethod1_1);
+        testClass1.addChild( testMethod1_2);
+
+        Description testMethod2 = getDescription2();
+        testClass2.addChild(testMethod2);
+
+        
+        listener.testRunStarted(rootSuite);
+        
+        listener.testStarted(testMethod1_1);
+        listener.testStarted(testMethod1_2);
+        listener.testFinished( testMethod1_1);
+        listener.testFinished( testMethod1_2);
+
+        listener.testStarted(testMethod2);
+        listener.testFinished( testMethod2);
+
         Result temp = new Result();
         listener.testRunFinished( temp);
 
-        verify(real).testRunStarted( description1);
-        verify(real).testStarted( description1);
-        verify(real).testRunStarted( description2);
-        verify(real).testStarted( description2);
+        verify(real).testRunStarted( testClass1);
+        verify(real).testStarted( testMethod1_1);
+        verify(real).testStarted( testMethod1_2);
+        verify(real).testFinished( testMethod1_1);
+        verify(real).testFinished( testMethod1_2);
+
+        verify(real).testRunStarted( testClass2);
+        verify(real).testStarted( testMethod2);
+        verify(real).testFinished( testMethod2);
+
+        verify(real, times(2)).testRunFinished( any( Result.class));
     }
 
     @Test
     public void testCreateAnnotatedDescriptions(){
         Description testRunDescription = Description.createSuiteDescription(DemultiplexingRunListenerTest.class);
-        Description description1 = Description.createTestDescription( DemultiplexingRunListenerTest.class, "testStub1");
-        Description description2 = Description.createTestDescription( Dummy.class, "testStub2");
-        testRunDescription.addChild( description1);
+        Description description1_1 = getDescription1_1();
+        Description description1_2 = getDescription1_2();
+        Description description2 = getDescription2();
+        testRunDescription.addChild( description1_1);
+        testRunDescription.addChild( description1_2);
         testRunDescription.addChild( description2);
 
         final Map<String,DemultiplexingRunListener.AnnotatedDescription> map = DemultiplexingRunListener.createAnnotatedDescriptions(testRunDescription);
         assertNotNull( map);
 
-        DemultiplexingRunListener.AnnotatedDescription annotatedDescription1 = map.get(description1.getDisplayName());
-        assertFalse( annotatedDescription1.setDone());
+        DiagnosticRunListener target = new DiagnosticRunListener();
+        DemultiplexingRunListener.AnnotatedDescription annotatedDescription1_1 = map.get(description1_1.getDisplayName());
+        assertFalse( annotatedDescription1_1.setDone(target));
+        DemultiplexingRunListener.AnnotatedDescription annotatedDescription1_2 = map.get(description1_2.getDisplayName());
+        assertFalse( annotatedDescription1_2.setDone(target));
         DemultiplexingRunListener.AnnotatedDescription annotatedDescription2 = map.get(description2.getDisplayName());
-        assertTrue( annotatedDescription2.setDone());
+        assertTrue( annotatedDescription2.setDone(target));
+    }
+
+    private Description getDescription2() {
+        return Description.createTestDescription( Dummy2.class, "testStub2");
+    }
+
+    private Description getDescription1_2() {
+        return Description.createTestDescription( Dummy.class, "testDummy1_1");
+    }
+
+    private Description getDescription1_1() {
+        return Description.createTestDescription( Dummy.class, "testDummy1_2");
     }
 }

@@ -25,23 +25,21 @@ import org.junit.runner.Description;
 import org.junit.runner.Result;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Demultiplexes threaded running og tests into something that does not look threaded.
  * Essentially makes a threaded junit core RunListener behave like something like a
  * junit4 reporter can handle.
+ * <p/>
+ * This version is non-ketchup mode, outputting test results as the individual suites complete.
  *
- * The disadvantage of this demultiplexer is that there's no results being echoed to the
- * console as tests are being run
- * All results come like ketchup out of the bottle.
  * @author Kristian Rosenvold, kristianAzeniorD0Tno
  */
 public class DemultiplexingRunListener extends RunListener {
-    private final Map<String, RecordingRunListener> classList = new HashMap<String, RecordingRunListener>();
     private final RunListener realtarget;
 
-    private volatile Description rootDescription;
     private volatile Map<String, AnnotatedDescription> annotatedDescriptionMap;
 
     public DemultiplexingRunListener(RunListener realtarget) {
@@ -50,114 +48,134 @@ public class DemultiplexingRunListener extends RunListener {
 
     @Override
     public void testRunStarted(Description description) throws Exception {
-        annotatedDescriptionMap = createAnnotatedDescriptions( description);
+        annotatedDescriptionMap = createAnnotatedDescriptions(description);
     }
 
     @Override
     public void testRunFinished(Result outerResult) throws Exception {
-        for (RecordingRunListener classReport : classList.values()) {
-            classReport.replay( realtarget);
-        }
+        // SHould be finished through all the tests.
     }
 
     @Override
     public void testStarted(Description description) throws Exception {
-        getOrCreateClassReport(description).testStarted( description);
+        final AnnotatedDescription annotatedDescription = getAnnotatedDescription(description);
+        annotatedDescription.startIfUnstarted();
+        annotatedDescription.getRecordingRunListener().testStarted(description);
     }
 
     @Override
     public void testFinished(Description description) throws Exception {
-        getClassReport( description).testFinished(description);
-    }
-
-    @Override
-    public void testFailure(Failure failure) throws Exception {
-        getClassReport( failure.getDescription()).testFailure( failure);
-    }
-
-    @Override
-    public void testAssumptionFailure(Failure failure) {
-        getClassReport(failure.getDescription()).testAssumptionFailure( failure);
+        final AnnotatedDescription annotatedDescription = getAnnotatedDescription(description);
+        annotatedDescription.getRecordingRunListener().testFinished(description);
+        annotatedDescription.setDone(realtarget);
     }
 
     @Override
     public void testIgnored(Description description) throws Exception {
-        getClassReport(description).testIgnored(description);
+        final AnnotatedDescription annotatedDescription = getAnnotatedDescription(description);
+        annotatedDescription.getRecordingRunListener().testIgnored(description);
+        annotatedDescription.setDone(realtarget);
+    }
+
+    @Override
+    public void testFailure(Failure failure) throws Exception {
+        final AnnotatedDescription annotatedDescription = getAnnotatedDescription(failure.getDescription());
+        annotatedDescription.getRecordingRunListener().testFailure(failure);
+        annotatedDescription.setDone(realtarget);
+    }
+
+    @Override
+    public void testAssumptionFailure(Failure failure) {
+        final AnnotatedDescription annotatedDescription = getAnnotatedDescription(failure.getDescription());
+        annotatedDescription.getRecordingRunListener().testAssumptionFailure(failure);
+        annotatedDescription.setDone(realtarget);
     }
 
 
-    RecordingRunListener getClassReport(Description description) {
-        synchronized ( classList){
-          return classList.get( description.getClassName());
-        }
-    }
-
-    static Map<String, AnnotatedDescription> createAnnotatedDescriptions(Description description){
-        Map<String, AnnotatedDescription> result = new HashMap<String, AnnotatedDescription>();
-        createAnnotatedDescriptions( description, result, null);
+    private AnnotatedDescription getAnnotatedDescription(Description description) {
+        final AnnotatedDescription result = annotatedDescriptionMap.get(description.getDisplayName());
+        if (result == null)
+            throw new IllegalStateException("No AnnotatedDescription found for " + description + ", inconsistent junit behaviour. Unknown junit version?");
         return result;
     }
 
-    private static void createAnnotatedDescriptions(Description description, Map<String, AnnotatedDescription> result, AnnotatedDescription parent){
-        final ArrayList<Description> children = description.getChildren();
-        AnnotatedDescription current = new AnnotatedDescription( parent, description, children.size());
-        if ( description.getDisplayName() != null)
-            result.put( description.getDisplayName(), current);
 
-        for( Description item : children){
-            createAnnotatedDescriptions( item, result, current);
+    static Map<String, AnnotatedDescription> createAnnotatedDescriptions(Description description) {
+        Map<String, AnnotatedDescription> result = new HashMap<String, AnnotatedDescription>();
+        createAnnotatedDescriptions(description, result, null);
+        return result;
+    }
+
+    private static void createAnnotatedDescriptions(Description description, Map<String, AnnotatedDescription> result, AnnotatedDescription parent) {
+        final ArrayList<Description> children = description.getChildren();
+        AnnotatedDescription current = new AnnotatedDescription(parent, description);
+        if (description.getDisplayName() != null)
+            result.put(description.getDisplayName(), current);
+
+        for (Description item : children) {
+            createAnnotatedDescriptions(item, result, current);
         }
     }
 
     static class AnnotatedDescription {
         private final AnnotatedDescription parent;
         private final Description description;
-        private final int numChildren;
-        private volatile boolean done = false;
+        private final RecordingRunListener recordingRunListener;
+        private AtomicBoolean started = new AtomicBoolean(false);
         private AtomicInteger numberOfCompletedChildren = new AtomicInteger(0);
 
 
-        AnnotatedDescription(AnnotatedDescription parent, Description description, int numChildren) {
+        public AnnotatedDescription(AnnotatedDescription parent, Description description) {
             this.parent = parent;
             this.description = description;
-            this.numChildren = numChildren;
+            recordingRunListener = new RecordingRunListener();
         }
 
-        boolean incrementCompletedChildrenCount(){
-            return numChildren == numberOfCompletedChildren.incrementAndGet();
-
-        }
-
-        boolean setDone(){
-            return parent.incrementCompletedChildrenCount();
-        }
-
-    }
-
-
-    private RecordingRunListener getOrCreateClassReport(Description description) throws Exception {
-        RecordingRunListener result;
-        synchronized (classList) {
-            result = classList.get(description.getClassName());
-            if (result == null) {
-                result = new RecordingRunListener();
-                result.testRunStarted( description);
-                classList.put(description.getClassName(), result);
+        public void startIfUnstarted() throws Exception {
+            if (started.compareAndSet(false, true)) {
+                getRecordingRunListener().testRunStarted(parent.getDescription());
             }
         }
-        return result;
+
+        private boolean incrementCompletedChildrenCount() {
+            return description.getChildren().size() == numberOfCompletedChildren.incrementAndGet();
+        }
+
+        boolean setDone(RunListener target) {
+            if (description.isTest()) {
+                return parent.setDone(target);
+            } else {
+                final boolean result = incrementCompletedChildrenCount();
+                if (result) {
+                   try {
+                       recordingRunListener.replay(target);
+                   } catch (Exception e) {
+                       throw new RuntimeException(e);
+                   }
+               }
+                return result;
+            }
+        }
+
+        public RecordingRunListener getRecordingRunListener() {
+            return description.isTest() ? parent.getRecordingRunListener() : recordingRunListener;
+        }
+
+        private Description getDescription() {
+            return description;
+        }
     }
-    
-    public class RecordingRunListener extends RunListener {
+
+
+    public static class RecordingRunListener extends RunListener {
         private volatile Description testRunStarted;
         private final List<Description> testStarted = Collections.synchronizedList(new ArrayList<Description>());
-        private final List<Description> testFinished =  Collections.synchronizedList(new ArrayList<Description>());
-        private final List<Failure> testFailure =  Collections.synchronizedList(new ArrayList<Failure>());
-        private final List<Failure> testAssumptionFailure =  Collections.synchronizedList(new ArrayList<Failure>());
-        private final List<Description> testIgnored =  Collections.synchronizedList(new ArrayList<Description>());
+        private final List<Description> testFinished = Collections.synchronizedList(new ArrayList<Description>());
+        private final List<Failure> testFailure = Collections.synchronizedList(new ArrayList<Failure>());
+        private final List<Failure> testAssumptionFailure = Collections.synchronizedList(new ArrayList<Failure>());
+        private final List<Description> testIgnored = Collections.synchronizedList(new ArrayList<Description>());
         private final Result resultForThisClass = new Result();
         private final RunListener classRunListener = resultForThisClass.createListener();
-
 
 
         @Override
@@ -172,51 +190,51 @@ public class DemultiplexingRunListener extends RunListener {
 
         @Override
         public void testStarted(Description description) throws Exception {
-            testStarted.add( description);
-            classRunListener.testStarted( description);
+            testStarted.add(description);
+            classRunListener.testStarted(description);
         }
 
         @Override
         public void testFinished(Description description) throws Exception {
-            testFinished.add( description);
+            testFinished.add(description);
             classRunListener.testFinished(description);
         }
 
         @Override
         public void testFailure(Failure failure) throws Exception {
-            testFailure.add( failure);
-            classRunListener.testFailure( failure);
+            testFailure.add(failure);
+            classRunListener.testFailure(failure);
         }
 
         @Override
         public void testAssumptionFailure(Failure failure) {
-            testAssumptionFailure.add( failure);
+            testAssumptionFailure.add(failure);
         }
 
         @Override
         public void testIgnored(Description description) throws Exception {
-            testIgnored.add(  description);
+            testIgnored.add(description);
         }
 
         public void replay(RunListener target) throws Exception {
-            target.testRunStarted (testRunStarted);
+            target.testRunStarted(testRunStarted);
 
-            for( Description description : testStarted) {
-                target.testStarted( description);
+            for (Description description : testStarted) {
+                target.testStarted(description);
             }
-            for( Failure failure : testFailure) {
-                target.testFailure( failure);
+            for (Failure failure : testFailure) {
+                target.testFailure(failure);
             }
-            for( Description description : testIgnored) {
-                target.testIgnored( description);
+            for (Description description : testIgnored) {
+                target.testIgnored(description);
             }
-            for( Failure failure : testAssumptionFailure) {
-                target.testAssumptionFailure( failure);
+            for (Failure failure : testAssumptionFailure) {
+                target.testAssumptionFailure(failure);
             }
-            for( Description description : testFinished) {
-                target.testFinished( description);
+            for (Description description : testFinished) {
+                target.testFinished(description);
             }
-            target.testRunFinished( resultForThisClass);
+            target.testRunFinished(resultForThisClass);
         }
 
 
