@@ -6,7 +6,7 @@
     <groupId>org.jdogma.junit</groupId>
     <artifactId>configurable-parallel-computer</artifactId>
     <packaging>jar</packaging>
-    <version>1.1</version>
+    <version>1.2</version>
     <name>Test</name>
     <url>http://github.com/krosenvold/configurable-parallel-computer</url>
 

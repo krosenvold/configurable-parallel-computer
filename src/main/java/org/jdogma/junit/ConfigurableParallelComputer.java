@@ -61,8 +61,8 @@ public class ConfigurableParallelComputer extends Computer {
         int totalThreads = numberOfThreads * (perCore ? Runtime.getRuntime().availableProcessors() : 1);
         fixedPool = true;
         fService = Executors.newFixedThreadPool(totalThreads);
-        this.methodRunnerInterceptor = new DelayedRunner( fService);
-        this.classRunnerInterceptor = new DelayedClassRunner();
+        this.methodRunnerInterceptor = fMethods ? new AsynchronousRunner( fService) : new SynchronousRunner();
+        this.classRunnerInterceptor = fClasses ? new AsynchronousRunner( fService) : new SynchronousRunner();
     }
 
     public void close() throws ExecutionException {

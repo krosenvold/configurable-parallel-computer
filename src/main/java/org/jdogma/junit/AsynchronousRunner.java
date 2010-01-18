@@ -33,11 +33,11 @@ import java.util.concurrent.Future;
  * @author Kristian Rosenvold, kristianAzeniorD0Tno
  */
 
-public class DelayedRunner extends ConcurrentRunnerInterceptorBase implements RunnerScheduler {
+public class AsynchronousRunner extends ConcurrentRunnerInterceptorBase implements RunnerScheduler {
     private final List<Callable<Object>> fResults = Collections.synchronizedList(new ArrayList<Callable<Object>>());
     private final ExecutorService fService;
 
-    public DelayedRunner(ExecutorService fService) {
+    public AsynchronousRunner(ExecutorService fService) {
         this.fService = fService;
     }
 

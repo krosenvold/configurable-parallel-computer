@@ -24,7 +24,7 @@ import org.junit.runners.model.RunnerScheduler;
 /*
  * @author Kristian Rosenvold, kristianAzeniorD0Tno
  */
-public class DelayedClassRunner extends ConcurrentRunnerInterceptorBase implements RunnerScheduler {
+public class SynchronousRunner extends ConcurrentRunnerInterceptorBase implements RunnerScheduler {
     public void schedule(final Runnable childStatement) {
         childStatement.run();
     }
