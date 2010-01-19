@@ -24,16 +24,12 @@ import org.junit.runners.model.RunnerScheduler;
 /*
  * @author Kristian Rosenvold, kristianAzeniorD0Tno
  */
-public class SynchronousRunner extends ConcurrentRunnerInterceptorBase implements RunnerScheduler {
+public class SynchronousRunner implements RunnerScheduler {
     public void schedule(final Runnable childStatement) {
         childStatement.run();
     }
 
     public void finished() {
     }
-
-    public void done() throws InterruptedException {
-    }
-
 }
 

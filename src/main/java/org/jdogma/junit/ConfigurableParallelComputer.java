@@ -47,53 +47,45 @@ public class ConfigurableParallelComputer extends Computer {
     }
 
     public ConfigurableParallelComputer(boolean fClasses, boolean fMethods) {
-        this.fClasses = fClasses;
-        this.fMethods = fMethods;
-        fixedPool = false;
-        fService = Executors.newCachedThreadPool();
-        this.classRunnerInterceptor = new SingleExecutorServiceRunner(fService);
-        this.methodRunnerInterceptor = new SingleExecutorServiceRunner(fService);
+        this ( fClasses, fMethods, Executors.newCachedThreadPool(), false);
     }
 
     public ConfigurableParallelComputer(boolean fClasses, boolean fMethods, Integer numberOfThreads, boolean perCore) {
+        this( fClasses,
+              fMethods,
+              Executors.newFixedThreadPool(numberOfThreads * (perCore ? Runtime.getRuntime().availableProcessors() : 1)),
+                true);
+    }
+    private ConfigurableParallelComputer(boolean fClasses, boolean fMethods, ExecutorService executorService, boolean fixedPool) {
         this.fClasses = fClasses;
         this.fMethods = fMethods;
-        int totalThreads = numberOfThreads * (perCore ? Runtime.getRuntime().availableProcessors() : 1);
-        fixedPool = true;
-        fService = Executors.newFixedThreadPool(totalThreads);
+        fService = executorService;
+        this.fixedPool = fixedPool;
         this.methodRunnerInterceptor = fMethods ? new AsynchronousRunner( fService) : new SynchronousRunner();
         this.classRunnerInterceptor = fClasses ? new AsynchronousRunner( fService) : new SynchronousRunner();
     }
 
     public void close() throws ExecutionException {
-        if (this.methodRunnerInterceptor instanceof ConcurrentRunnerInterceptorBase){
+/*        if (this.methodRunnerInterceptor instanceof AsynchronousRunner){
             try {
-                ((ConcurrentRunnerInterceptorBase) methodRunnerInterceptor).done();
+                ((AsynchronousRunner) methodRunnerInterceptor).done();
             } catch (InterruptedException e) {
                 e.printStackTrace();  
             }
         }
-        if (this.classRunnerInterceptor instanceof ConcurrentRunnerInterceptorBase){
+        if (this.classRunnerInterceptor instanceof AsynchronousRunner){
             try {
-                ((ConcurrentRunnerInterceptorBase) classRunnerInterceptor).done();
+                ((AsynchronousRunner) classRunnerInterceptor).done();
             } catch (InterruptedException e) {
                 e.printStackTrace();  
             }
-        }
+        }*/
         fService.shutdown();
         try {
         fService.awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS);
         } catch (InterruptedException e){
             throw new RuntimeException(e);
         }
-    }
-
-    public static Computer classes(Integer numberOfThreads, boolean perCore) {
-        return new ConfigurableParallelComputer(true, false, numberOfThreads, perCore);
-    }
-
-    public static Computer methods(Integer numberOfThreads, boolean perCore) {
-        return new ConfigurableParallelComputer(false, true, numberOfThreads, perCore);
     }
 
     private Runner parallelize(Runner runner, RunnerScheduler runnerInterceptor) {
@@ -103,16 +95,23 @@ public class ConfigurableParallelComputer extends Computer {
         return runner;
     }
 
+    private RunnerScheduler getMethodInterceptor(){
+        return fMethods ? new AsynchronousRunner( fService) : new SynchronousRunner();
+    }
+    private RunnerScheduler getClassInterceptor(){
+        return fClasses ? new AsynchronousRunner( fService) : new SynchronousRunner();
+    }
+
     @Override
     public Runner getSuite(RunnerBuilder builder, java.lang.Class<?>[] classes) throws InitializationError {
         Runner suite = super.getSuite(builder, classes);
-        return fClasses ? parallelize(suite, classRunnerInterceptor) : suite;
+        return fClasses ? parallelize(suite, getClassInterceptor()) : suite;
     }
 
     @Override
     protected Runner getRunner(RunnerBuilder builder, Class<?> testClass) throws Throwable {
         Runner runner = super.getRunner(builder, testClass);
-        return fMethods ? parallelize(runner, methodRunnerInterceptor) : runner;
+        return fMethods ? parallelize(runner, getMethodInterceptor()) : runner;
     }
 
     @Override

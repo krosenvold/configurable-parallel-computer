@@ -24,17 +24,14 @@ import org.junit.runners.model.RunnerScheduler;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 /*
  * @author Kristian Rosenvold, kristianAzeniorD0Tno
  */
 
-public class AsynchronousRunner extends ConcurrentRunnerInterceptorBase implements RunnerScheduler {
-    private final List<Callable<Object>> fResults = Collections.synchronizedList(new ArrayList<Callable<Object>>());
+public class AsynchronousRunner implements RunnerScheduler {
+    private final List<Future<Object>> futures = Collections.synchronizedList(new ArrayList<Future<Object>>());
     private final ExecutorService fService;
 
     public AsynchronousRunner(ExecutorService fService) {
@@ -42,23 +39,29 @@ public class AsynchronousRunner extends ConcurrentRunnerInterceptorBase implemen
     }
 
     public void schedule(final Runnable childStatement) {
-        fResults.add(new Callable<Object>() {
+        final Callable<Object> objectCallable = new Callable<Object>() {
             public Object call() throws Exception {
                 childStatement.run();
                 return null;
             }
-        });
+        };
+        futures.add(fService.submit(objectCallable));
     }
 
 
     public void finished() {
+        for (Future<Object> each : futures)
+            try {
+                each.get();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace(); 
+            }
     }
 
     public void done() throws InterruptedException, ExecutionException {
-        List<Future<Object>> futures = fService.invokeAll(fResults);
-        for (Future<Object> each : futures)
-               each.get();
-        fService.shutdown();
+   //     completionService.take()
     }
 
 }

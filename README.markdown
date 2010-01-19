@@ -6,6 +6,14 @@ To install: Build from source using mvn install
 
 <h2>RELEASES</h2>
 
+1.3
+
+- Fixed problem with parallel=classes and surefire-reports not being generated.
+- Modified CPC to be more like junit's ParallelComputer.
+   I still believe junit's ParallelComputer model has the potential for deadlocks with parallel=both and limited threads, and we now also
+    have this capability ;) If you use both, it should basically be because you're using a lot of threads ;) (You should have /more/
+    threads than test-methods in any single test class to be safe).
+
 1.2
 
 Fixed concurrency (or lack thereof) when running parallel=classes. 
