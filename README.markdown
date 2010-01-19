@@ -6,6 +6,10 @@ To install: Build from source using mvn install
 
 <h2>RELEASES</h2>
 
+1.4
+
+- Fixed a problem with failed tests and failed assumptions in the demultiplexer.
+
 1.3
 
 - Fixed problem with parallel=classes and surefire-reports not being generated.

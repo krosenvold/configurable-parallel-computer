@@ -46,7 +46,7 @@ public class JUnitCoreConcurrencyTest {
         
         DiagnosticRunListener diagnosticRunListener = new DiagnosticRunListener(true, result.createListener());
         JUnitCore jUnitCore = getJunitCore(result, diagnosticRunListener);
-        ConfigurableParallelComputer computer = new ConfigurableParallelComputer(true, true);
+        ConfigurableParallelComputer computer = new ConfigurableParallelComputer(true, false);
         jUnitCore.run(computer, realClasses);
         computer.close();
         assertEquals("All tests should succeed, right ?",  5, result.getRunCount());
@@ -55,7 +55,7 @@ public class JUnitCoreConcurrencyTest {
     @Test
     public void testOneMethod(){
         JUnitCore jUnitCore = new JUnitCore();
-        Computer computer = new ConfigurableParallelComputer(true, true);
+        Computer computer = new ConfigurableParallelComputer(false, true);
         jUnitCore.run( computer, new Class[] { Dummy.class, Dummy.class, Dummy.class});
     }
 
@@ -75,6 +75,44 @@ public class JUnitCoreConcurrencyTest {
         JUnitCore jUnitCore = getJunitCore(result);
         ParallelComputer computer = new ParallelComputer(true, true);
         timedRun(NUMTESTS, result, realClasses, jUnitCore, computer);
+    }
+
+    @Test
+    public void testWithFailingAssertionCPC() throws Exception {
+        System.out.println("testWithFailingAssertionCPC");
+        runWithFailingAssertion(new ConfigurableParallelComputer(false, true, 6, true));
+        runWithFailingAssertion(new ConfigurableParallelComputer(true, false, 6, true));
+    }
+
+    @Test
+    public void testWithFailingAssertion() throws Exception {
+        System.out.println("testWithFailingAssertion");
+        runWithFailingAssertion(new ParallelComputer(false, true));
+        runWithFailingAssertion(new ParallelComputer(true, true));
+//        runWithFailingAssertion(new ParallelComputer(true, true));
+    }
+    
+
+    private void runWithFailingAssertion(Computer computer) throws ExecutionException {
+        Result result = new Result();
+        Class[] realClasses = getClassList(FailingAssertions.class);
+        JUnitCore jUnitCore = getJunitCore(result);
+        runIt( realClasses, jUnitCore, computer);
+        assertEquals("No tests should fail, right ?",  NUMTESTS, result.getFailures().size());
+        assertEquals("All tests should succeed, right ?",  0, result.getIgnoreCount());
+        assertEquals("All tests should succeed, right ?",  NUMTESTS * 3, result.getRunCount());
+    }
+
+    @Test
+    public void testWithFailure() throws Exception {
+        Computer computer = new ConfigurableParallelComputer(false, true, 2, true);
+        Result result = new Result();
+        Class[] realClasses = getClassList(Failure.class);
+        JUnitCore jUnitCore = getJunitCore(result);
+        runIt( realClasses, jUnitCore, computer);
+        assertEquals("No tests should fail, right ?",  NUMTESTS, result.getFailures().size());
+        assertEquals("All tests should succeed, right ?",  0, result.getIgnoreCount());
+        assertEquals("All tests should succeed, right ?",  NUMTESTS * 3, result.getRunCount());
     }
 
     @Test
@@ -118,22 +156,29 @@ public class JUnitCoreConcurrencyTest {
         return jUnitCore;
     }
 
-    private void timedRun(int NUMTESTS, Result result, Class[] realClasses, JUnitCore jUnitCore, Computer computer) throws ExecutionException {
+    private void runIt(Class[] realClasses, JUnitCore jUnitCore, Computer computer) throws ExecutionException {
         long start = System.currentTimeMillis();
         jUnitCore.run(computer, realClasses);
         if (computer instanceof ConfigurableParallelComputer){
              ((ConfigurableParallelComputer)computer).close();
         }
         System.out.println(" XelapsedX " + (System.currentTimeMillis() - start) + "  for " + computer.toString());
+    }
+
+    private void timedRun(int NUMTESTS, Result result, Class[] realClasses, JUnitCore jUnitCore, Computer computer) throws ExecutionException {
+        runIt( realClasses, jUnitCore, computer);    
         assertEquals("No tests should fail, right ?",  0, result.getFailures().size());
         assertEquals("All tests should succeed, right ?",  0, result.getIgnoreCount());
         assertEquals("All tests should succeed, right ?",  NUMTESTS * 3, result.getRunCount());
     }
 
     private Class[] getClassList() {
+        return getClassList( Dummy.class);
+    }
+    private Class[] getClassList(Class testClass) {
         List<Class> realClasses = new ArrayList<Class>();
         for (int i = 0; i < NUMTESTS; i ++){
-            realClasses.add( Dummy.class);
+            realClasses.add( testClass);
         }
         return realClasses.toArray(new Class[realClasses.size()]);
     }

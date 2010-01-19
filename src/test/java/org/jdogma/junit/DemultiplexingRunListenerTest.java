@@ -20,7 +20,9 @@
 package org.jdogma.junit;
 
 import org.junit.Test;
+import org.junit.runner.Computer;
 import org.junit.runner.Description;
+import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.RunListener;
 
@@ -110,6 +112,25 @@ public class DemultiplexingRunListenerTest {
         DemultiplexingRunListener.AnnotatedDescription annotatedDescription2 = map.get(description2.getDisplayName());
         assertTrue( annotatedDescription2.setDone(target));
     }
+
+    @Test
+    public void testJunitCoreAssumptions() throws Exception {
+        Result result = new Result();
+        DiagnosticRunListener diagnosticRunListener = new DiagnosticRunListener();
+
+        JUnitCore jUnitCore = new JUnitCore();
+        jUnitCore.addListener( diagnosticRunListener);
+        Computer computer = new Computer();
+
+        jUnitCore.run(computer, new Class[] { NothingGood.class});
+
+        assertEquals(1, diagnosticRunListener.getNumTestIgnored().get());
+        assertEquals(3, diagnosticRunListener.getNumTestFinished().get());
+        assertEquals(2, diagnosticRunListener.getNumTestFailed().get());
+        assertEquals(1, diagnosticRunListener.getNumTestAssumptionsFailed().get());
+        assertEquals(3, diagnosticRunListener.getNumTestStarted().get());
+    }
+
 
     private Description getDescription2() {
         return Description.createTestDescription( Dummy2.class, "testStub2");

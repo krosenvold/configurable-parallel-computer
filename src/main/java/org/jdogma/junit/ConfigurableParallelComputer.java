@@ -38,8 +38,6 @@ public class ConfigurableParallelComputer extends Computer {
     private final boolean fMethods;
     private final boolean fixedPool;
     private final ExecutorService fService;
-    private final RunnerScheduler methodRunnerInterceptor;
-    private final RunnerScheduler classRunnerInterceptor;
 
 
     public ConfigurableParallelComputer() {
@@ -57,29 +55,14 @@ public class ConfigurableParallelComputer extends Computer {
                 true);
     }
     private ConfigurableParallelComputer(boolean fClasses, boolean fMethods, ExecutorService executorService, boolean fixedPool) {
+        if (fClasses && fMethods && fixedPool) throw new IllegalArgumentException("Due to deadlock risk ConfigurableParallelComputer no longer supports fixed threadpool and bot classes and threads == true");
         this.fClasses = fClasses;
         this.fMethods = fMethods;
         fService = executorService;
         this.fixedPool = fixedPool;
-        this.methodRunnerInterceptor = fMethods ? new AsynchronousRunner( fService) : new SynchronousRunner();
-        this.classRunnerInterceptor = fClasses ? new AsynchronousRunner( fService) : new SynchronousRunner();
     }
 
     public void close() throws ExecutionException {
-/*        if (this.methodRunnerInterceptor instanceof AsynchronousRunner){
-            try {
-                ((AsynchronousRunner) methodRunnerInterceptor).done();
-            } catch (InterruptedException e) {
-                e.printStackTrace();  
-            }
-        }
-        if (this.classRunnerInterceptor instanceof AsynchronousRunner){
-            try {
-                ((AsynchronousRunner) classRunnerInterceptor).done();
-            } catch (InterruptedException e) {
-                e.printStackTrace();  
-            }
-        }*/
         fService.shutdown();
         try {
         fService.awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS);

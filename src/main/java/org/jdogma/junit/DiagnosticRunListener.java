@@ -38,6 +38,27 @@ public class DiagnosticRunListener extends RunListener {
     private final boolean printToConsole;
     private final RunListener target;
 
+
+    public AtomicInteger getNumTestStarted() {
+        return numTestStarted;
+    }
+
+    public AtomicInteger getNumTestFailed() {
+        return numTestFailed;
+    }
+
+    public AtomicInteger getNumTestAssumptionsFailed() {
+        return numTestAssumptionsFailed;
+    }
+
+    public AtomicInteger getNumTestFinished() {
+        return numTestFinished;
+    }
+
+    public AtomicInteger getNumTestIgnored() {
+        return numTestIgnored;
+    }
+
     private void print(String event, Description description) {
         if (printToConsole) System.out.println(Thread.currentThread().toString() +  ", event = " + event + ", " + description);
     }
@@ -69,7 +90,7 @@ public class DiagnosticRunListener extends RunListener {
 
     @Override
     public void testRunFinished(Result result) throws Exception {
-        print("testRunStarted", result);
+        print("testRunFinished", result);
         if (target != null) target.testRunFinished( result);
 
     }

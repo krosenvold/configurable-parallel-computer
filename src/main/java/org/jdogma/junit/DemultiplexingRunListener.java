@@ -81,14 +81,12 @@ public class DemultiplexingRunListener extends RunListener {
     public void testFailure(Failure failure) throws Exception {
         final AnnotatedDescription annotatedDescription = getAnnotatedDescription(failure.getDescription());
         annotatedDescription.getRecordingRunListener().testFailure(failure);
-        annotatedDescription.setDone(realtarget);
     }
 
     @Override
     public void testAssumptionFailure(Failure failure) {
         final AnnotatedDescription annotatedDescription = getAnnotatedDescription(failure.getDescription());
         annotatedDescription.getRecordingRunListener().testAssumptionFailure(failure);
-        annotatedDescription.setDone(realtarget);
     }
 
 
