@@ -19,18 +19,18 @@
 
 package org.jdogma.junit;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
-
 import org.junit.Test;
 import org.junit.experimental.ParallelComputer;
-import static org.junit.Assert.*;
-import org.junit.runner.notification.RunListener;
-import org.junit.runner.JUnitCore;
 import org.junit.runner.Computer;
+import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
-import org.jdogma.junit.ConfigurableParallelComputer;
+import org.junit.runner.notification.RunListener;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Simple concurrency test of junit core.
@@ -47,7 +47,7 @@ public class JUnitCoreConcurrencyTest {
         Result result = new Result();
         Class[] realClasses = new Class[]  {Dummy.class, Dummy2.class};
         
-        DiagnosticRunListener diagnosticRunListener = new DiagnosticRunListener(true, result.createListener());
+        DiagnosticRunListener diagnosticRunListener = new DiagnosticRunListener(false, result.createListener());
         JUnitCore jUnitCore = getJunitCore(result, diagnosticRunListener);
         ConfigurableParallelComputer computer = new ConfigurableParallelComputer(true, false);
         jUnitCore.run(computer, realClasses);
@@ -56,10 +56,11 @@ public class JUnitCoreConcurrencyTest {
     }
 
     @Test
-    public void testOneMethod(){
+    public void testOneMethod() throws ExecutionException {
         JUnitCore jUnitCore = new JUnitCore();
-        Computer computer = new ConfigurableParallelComputer(false, true);
+        ConfigurableParallelComputer computer = new ConfigurableParallelComputer(false, true);
         jUnitCore.run( computer, new Class[] { Dummy.class, Dummy.class, Dummy.class});
+        computer.close();
     }
 
     @Test
@@ -71,13 +72,14 @@ public class JUnitCoreConcurrencyTest {
         timedRun(NUMTESTS, result, realClasses, jUnitCore, computer);
     }
 
+
     @Test
     public void testFullTestRunPC() throws Exception {
         System.out.println("testFullTestRunPC");
         Result result = new Result();
         Class[] realClasses = getClassList();
         JUnitCore jUnitCore = getJunitCore(result);
-        ParallelComputer computer = new ParallelComputer(true, true);
+        Computer computer = new ConfigurableParallelComputer(true, true);
         timedRun(NUMTESTS, result, realClasses, jUnitCore, computer);
     }
 
@@ -89,13 +91,13 @@ public class JUnitCoreConcurrencyTest {
     }
 
     @Test
-    public void testWithFailingAssertion() throws Exception {
-        System.out.println("testWithFailingAssertion");
-        runWithFailingAssertion(new ParallelComputer(false, true));
-        runWithFailingAssertion(new ParallelComputer(true, true));
-//        runWithFailingAssertion(new ParallelComputer(true, true));
+    public void testWithFailingAssertionC() throws Exception {
+        System.out.println("testWithFailingAssertionCPC");
+        final ParallelComputer computer = new ParallelComputer(false, true);
+        runWithFailingAssertion(computer);
+        runWithFailingAssertion(new ParallelComputer(true, false));
     }
-    
+
 
     private void runWithFailingAssertion(Computer computer) throws ExecutionException {
         Result result = new Result();
@@ -110,7 +112,7 @@ public class JUnitCoreConcurrencyTest {
     @Test
     public void testWithFailure() throws Exception {
         System.out.println("testWithFailure");
-        Computer computer = new ConfigurableParallelComputer(false, true, 2, true);
+        Computer computer = new ConfigurableParallelComputer(false, true, 4, true);
         Result result = new Result();
         Class[] realClasses = getClassList(Failure.class);
         JUnitCore jUnitCore = getJunitCore(result);

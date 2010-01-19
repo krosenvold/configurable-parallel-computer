@@ -52,7 +52,7 @@ public class AsynchronousRunner implements RunnerScheduler {
     public void finished() {
         for (Future<Object> each : futures)
             try {
-                each.get();
+               each.get();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (ExecutionException e) {

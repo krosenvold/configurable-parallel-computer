@@ -30,8 +30,16 @@
                     <target>1.5</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <forkMode>once</forkMode>
+                    <debugForkedProcess>${surefire.debugForkedProcess}</debugForkedProcess>
+                </configuration>
+            </plugin>
         </plugins>
-    </build>                        
+    </build>
     <distributionManagement>
         <repository>
             <id>snapshot-repo</id>
@@ -59,4 +67,7 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+   <properties>
+       <surefire.debugForkedProcess></surefire.debugForkedProcess>
+   </properties>    
 </project>
