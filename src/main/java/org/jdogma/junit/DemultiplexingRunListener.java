@@ -74,7 +74,6 @@ public class DemultiplexingRunListener extends RunListener {
     public void testIgnored(Description description) throws Exception {
         final AnnotatedDescription annotatedDescription = getAnnotatedDescription(description);
         annotatedDescription.getRecordingRunListener().testIgnored(description);
-        annotatedDescription.setDone(realtarget);
     }
 
     @Override

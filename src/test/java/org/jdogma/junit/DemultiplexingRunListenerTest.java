@@ -116,7 +116,8 @@ public class DemultiplexingRunListenerTest {
     @Test
     public void testJunitCoreAssumptions() throws Exception {
         Result result = new Result();
-        DiagnosticRunListener diagnosticRunListener = new DiagnosticRunListener();
+        DemultiplexingRunListener demultiplexingRunListener = new DemultiplexingRunListener(result.createListener());
+        DiagnosticRunListener diagnosticRunListener = new DiagnosticRunListener(true, demultiplexingRunListener);
 
         JUnitCore jUnitCore = new JUnitCore();
         jUnitCore.addListener( diagnosticRunListener);
