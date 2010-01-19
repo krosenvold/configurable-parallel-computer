@@ -109,6 +109,7 @@ public class JUnitCoreConcurrencyTest {
 
     @Test
     public void testWithFailure() throws Exception {
+        System.out.println("testWithFailure");
         Computer computer = new ConfigurableParallelComputer(false, true, 2, true);
         Result result = new Result();
         Class[] realClasses = getClassList(Failure.class);
