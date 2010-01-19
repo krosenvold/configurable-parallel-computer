@@ -39,6 +39,9 @@ import org.jdogma.junit.ConfigurableParallelComputer;
 public class JUnitCoreConcurrencyTest {
     private static final int NUMTESTS = 1000;
 
+
+    // I'm sorry about all the sout's in this test; but if you deadlock when building you will appreciate it.
+
     @Test
     public void testAnythingYouWantToPlayWith() throws Exception { 
         Result result = new Result();
@@ -70,6 +73,7 @@ public class JUnitCoreConcurrencyTest {
 
     @Test
     public void testFullTestRunPC() throws Exception {
+        System.out.println("testFullTestRunPC");
         Result result = new Result();
         Class[] realClasses = getClassList();
         JUnitCore jUnitCore = getJunitCore(result);
@@ -117,6 +121,7 @@ public class JUnitCoreConcurrencyTest {
 
     @Test
     public void testFixedThreadPool() throws Exception {
+        System.out.println("testFixedThreadPool");
         Result result = new Result();
         Class[] realClasses = getClassList();
         JUnitCore jUnitCore = getJunitCore(result);
@@ -126,6 +131,7 @@ public class JUnitCoreConcurrencyTest {
 
     @Test
     public void testClassesUnlimited() throws Exception {
+        System.out.println("testClassesUnlimited");
         Result result = new Result();
         Class[] realClasses = getClassList();
         JUnitCore jUnitCore = getJunitCore(result);
@@ -135,6 +141,7 @@ public class JUnitCoreConcurrencyTest {
 
     @Test
     public void testBothUnlimited() throws Exception {
+        System.out.println("testBothUnlimited");
         Result result = new Result();
         Class[] realClasses = getClassList();
         DiagnosticRunListener diagnosticRunListener = new DiagnosticRunListener(false, result.createListener());
