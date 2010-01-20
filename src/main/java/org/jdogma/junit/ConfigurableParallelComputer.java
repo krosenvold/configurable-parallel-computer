@@ -19,6 +19,9 @@
 
 package org.jdogma.junit;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutionException;
@@ -38,6 +41,7 @@ public class ConfigurableParallelComputer extends Computer {
     private final boolean fMethods;
     private final boolean fixedPool;
     private final ExecutorService fService;
+    private final List<NonBlockingAsynchronousRunner> nonBlockers = Collections.synchronizedList(new ArrayList<NonBlockingAsynchronousRunner>()); 
 
 
     public ConfigurableParallelComputer() {
@@ -55,7 +59,7 @@ public class ConfigurableParallelComputer extends Computer {
                 true);
     }
     private ConfigurableParallelComputer(boolean fClasses, boolean fMethods, ExecutorService executorService, boolean fixedPool) {
-        if (fClasses && fMethods && fixedPool) throw new IllegalArgumentException("Due to deadlock risk ConfigurableParallelComputer no longer supports fixed threadpool and bot classes and threads == true");
+//        if (fClasses && fMethods && fixedPool) throw new IllegalArgumentException("Due to deadlock risk ConfigurableParallelComputer no longer supports fixed threadpool and bot classes and threads == true");
         this.fClasses = fClasses;
         this.fMethods = fMethods;
         fService = executorService;
@@ -63,6 +67,10 @@ public class ConfigurableParallelComputer extends Computer {
     }
 
     public void close() throws ExecutionException {
+        for (NonBlockingAsynchronousRunner nonBlocker : nonBlockers) {
+            nonBlocker.waitForCompletion();
+        }
+
         fService.shutdown();
         try {
         fService.awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS);
@@ -79,10 +87,21 @@ public class ConfigurableParallelComputer extends Computer {
     }
 
     private RunnerScheduler getMethodInterceptor(){
+        if (fClasses && fMethods) {
+            final NonBlockingAsynchronousRunner blockingAsynchronousRunner = new NonBlockingAsynchronousRunner(fService);
+            nonBlockers.add ( blockingAsynchronousRunner);
+            return blockingAsynchronousRunner;
+        }
         return fMethods ? new AsynchronousRunner( fService) : new SynchronousRunner();
     }
     private RunnerScheduler getClassInterceptor(){
-        return fClasses ? new AsynchronousRunner( fService) : new SynchronousRunner();
+        if (fClasses) {
+            if (fMethods){
+                return new SynchronousRunner( );
+            }  else
+                return  new AsynchronousRunner( fService);
+        }
+        return new SynchronousRunner();
     }
 
     @Override

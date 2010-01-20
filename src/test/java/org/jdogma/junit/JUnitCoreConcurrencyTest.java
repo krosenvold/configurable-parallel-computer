@@ -87,7 +87,17 @@ public class JUnitCoreConcurrencyTest {
     public void testWithFailingAssertionCPC() throws Exception {
         System.out.println("testWithFailingAssertionCPC");
         runWithFailingAssertion(new ConfigurableParallelComputer(false, true, 6, true));
-        runWithFailingAssertion(new ConfigurableParallelComputer(true, false, 6, true));
+        runWithFailingAssertion(new ConfigurableParallelComputer(true, false, 12, false));
+        runWithFailingAssertion(new ConfigurableParallelComputer(true, true, 2, false));
+    }
+    @Test
+    public void testWithFailingAssertionCPCJust1() throws Exception {
+        System.out.println("testWithFailingAssertionCPC");
+        Result result = new Result();
+        final ConfigurableParallelComputer computer = new ConfigurableParallelComputer(true, true, 2, false);
+        Class[] realClasses = getClassList(FailingAssertions.class, 100);
+        JUnitCore jUnitCore = getJunitCore(result);
+        runIt( realClasses, jUnitCore, computer);
     }
 
     @Test
@@ -183,15 +193,18 @@ public class JUnitCoreConcurrencyTest {
     }
 
     private Class[] getClassList() {
-        return getClassList( Dummy.class);
+        return getClassList( Dummy.class, NUMTESTS);
     }
     private Class[] getClassList(Class testClass) {
+        return getClassList(testClass, NUMTESTS);
+    }
+
+    private Class[] getClassList(Class testClass, int numItems) {
         List<Class> realClasses = new ArrayList<Class>();
         for (int i = 0; i < NUMTESTS; i ++){
             realClasses.add( testClass);
         }
         return realClasses.toArray(new Class[realClasses.size()]);
     }
-
 
 }

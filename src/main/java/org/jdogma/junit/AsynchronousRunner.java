@@ -30,38 +30,13 @@ import java.util.concurrent.*;
  * @author Kristian Rosenvold, kristianAzeniorD0Tno
  */
 
-public class AsynchronousRunner implements RunnerScheduler {
-    private final List<Future<Object>> futures = Collections.synchronizedList(new ArrayList<Future<Object>>());
-    private final ExecutorService fService;
+public class AsynchronousRunner extends NonBlockingAsynchronousRunner {
 
     public AsynchronousRunner(ExecutorService fService) {
-        this.fService = fService;
+        super( fService);
     }
-
-    public void schedule(final Runnable childStatement) {
-        final Callable<Object> objectCallable = new Callable<Object>() {
-            public Object call() throws Exception {
-                childStatement.run();
-                return null;
-            }
-        };
-        futures.add(fService.submit(objectCallable));
-    }
-
 
     public void finished() {
-        for (Future<Object> each : futures)
-            try {
-               each.get();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace(); 
-            }
+        waitForCompletion();
     }
-
-    public void done() throws InterruptedException, ExecutionException {
-   //     completionService.take()
-    }
-
 }
