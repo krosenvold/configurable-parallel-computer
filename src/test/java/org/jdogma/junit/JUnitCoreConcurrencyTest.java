@@ -20,6 +20,7 @@
 package org.jdogma.junit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import org.junit.experimental.ParallelComputer;
 import org.junit.runner.Computer;
@@ -91,12 +92,36 @@ public class JUnitCoreConcurrencyTest {
     }
     @Test
     public void testWithSlowTestJustAfew() throws Exception {
+        int slack = 200;        
         System.out.println("testWithSlowTestJustAfew");
         Result result = new Result();
-        final Computer computer = new ConfigurableParallelComputer(true, true, 3, false);
-        Class[] realClasses = getClassList(SlowTest.class, 5);
+        final Computer computer = new ConfigurableParallelComputer(false, true, 3, false);
+        Class[] realClasses = getClassList(SlowTest.class, 5); // 300 ms in methods, 600 in classes
+
         JUnitCore jUnitCore = getJunitCore(result);
-        runIt( realClasses, jUnitCore, computer);
+        long resp = runIt( realClasses, jUnitCore, computer);
+    }
+    @Test
+    public void testSpeedWithSlowTest() throws Exception {
+        int slack = 200;
+        System.out.println("testSpeedWithSlowTest");
+        Result result = new Result();
+        Class[] realClasses = getClassList(SlowTest.class, 5); // 300 ms in methods, 600 in classes
+        JUnitCore jUnitCore = getJunitCore(result);
+
+        // Warmup to avoid classloading stuff
+        runIt( getClassList(SlowTest.class, 2), jUnitCore, new ConfigurableParallelComputer(true, false, 3, false));
+
+        // Running fClasses = true, it should be 600ms per class.
+        final Computer computer2 = new ConfigurableParallelComputer(true, false, 3, false);
+        long resp2 = runIt( realClasses, jUnitCore, computer2);
+        assertTrue("Thee threads running 5 classes at 600ms per class should clock in around 1200ms, actual=" + resp2, resp2 < (1200 + slack) );
+        final Computer computer3 = new ConfigurableParallelComputer(true, false, 3, false);
+        long resp3 = runIt( getClassList(SlowTest.class, 6), jUnitCore, computer3);
+        assertTrue("Three threads running 6 classes at 600ms per class should clock in around 1200ms, actual=" + resp3, resp3 < (1200 + slack) );
+        final Computer computer4 = new ConfigurableParallelComputer(true, false, 3, false);
+        long resp4 = runIt( getClassList(SlowTest.class, 7), jUnitCore, computer4);
+        assertTrue("Three threads running 7 classes at 600ms per class should clock in around 1800ms, actual=" + resp4, resp4 < (1800 + slack) );
     }
 
     @Test
@@ -137,8 +162,9 @@ public class JUnitCoreConcurrencyTest {
         Result result = new Result();
         Class[] realClasses = getClassList();
         JUnitCore jUnitCore = getJunitCore(result);
-        ConfigurableParallelComputer computer = new ConfigurableParallelComputer(false, true, 2, true);
-        timedRun(NUMTESTS, result, realClasses, jUnitCore, computer);
+        ConfigurableParallelComputer computer = new ConfigurableParallelComputer(false, true, 2, false);
+        long resp = timedRun(NUMTESTS, result, realClasses, jUnitCore, computer);
+        System.out.println("resp" + resp);
     }
 
     @Test
@@ -175,20 +201,23 @@ public class JUnitCoreConcurrencyTest {
         return jUnitCore;
     }
 
-    private void runIt(Class[] realClasses, JUnitCore jUnitCore, Computer computer) throws ExecutionException {
+    private long runIt(Class[] realClasses, JUnitCore jUnitCore, Computer computer) throws ExecutionException {
         long start = System.currentTimeMillis();
         jUnitCore.run(computer, realClasses);
         if (computer instanceof ConfigurableParallelComputer){
              ((ConfigurableParallelComputer)computer).close();
         }
-        System.out.println(" XelapsedX " + (System.currentTimeMillis() - start) + "  for " + computer.toString());
+        long rsult = System.currentTimeMillis() - start;
+        System.out.println(" XelapsedX " + rsult + "  for " + computer.toString());
+        return rsult;
     }
 
-    private void timedRun(int NUMTESTS, Result result, Class[] realClasses, JUnitCore jUnitCore, Computer computer) throws ExecutionException {
-        runIt( realClasses, jUnitCore, computer);    
+    private long timedRun(int NUMTESTS, Result result, Class[] realClasses, JUnitCore jUnitCore, Computer computer) throws ExecutionException {
+        long time = runIt( realClasses, jUnitCore, computer);    
         assertEquals("No tests should fail, right ?",  0, result.getFailures().size());
         assertEquals("All tests should succeed, right ?",  0, result.getIgnoreCount());
         assertEquals("All tests should succeed, right ?",  NUMTESTS * 3, result.getRunCount());
+        return time;
     }
 
     private Class[] getClassList() {
