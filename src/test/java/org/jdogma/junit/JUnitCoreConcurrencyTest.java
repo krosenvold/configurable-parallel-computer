@@ -102,29 +102,6 @@ public class JUnitCoreConcurrencyTest {
         long resp = runIt( realClasses, jUnitCore, computer);
     }
     @Test
-    public void testSpeedWithSlowTest() throws Exception {
-        int slack = 200;
-        System.out.println("testSpeedWithSlowTest");
-        Result result = new Result();
-        Class[] realClasses = getClassList(SlowTest.class, 5); // 300 ms in methods, 600 in classes
-        JUnitCore jUnitCore = getJunitCore(result);
-
-        // Warmup to avoid classloading stuff
-        runIt( getClassList(SlowTest.class, 2), jUnitCore, new ConfigurableParallelComputer(true, false, 3, false));
-
-        // Running fClasses = true, it should be 600ms per class.
-        final Computer computer2 = new ConfigurableParallelComputer(true, false, 3, false);
-        long resp2 = runIt( realClasses, jUnitCore, computer2);
-        assertTrue("Thee threads running 5 classes at 600ms per class should clock in around 1200ms, actual=" + resp2, resp2 < (1200 + slack) );
-        final Computer computer3 = new ConfigurableParallelComputer(true, false, 3, false);
-        long resp3 = runIt( getClassList(SlowTest.class, 6), jUnitCore, computer3);
-        assertTrue("Three threads running 6 classes at 600ms per class should clock in around 1200ms, actual=" + resp3, resp3 < (1200 + slack) );
-        final Computer computer4 = new ConfigurableParallelComputer(true, false, 3, false);
-        long resp4 = runIt( getClassList(SlowTest.class, 7), jUnitCore, computer4);
-        assertTrue("Three threads running 7 classes at 600ms per class should clock in around 1800ms, actual=" + resp4, resp4 < (1800 + slack) );
-    }
-
-    @Test
     public void testWithFailingAssertionC() throws Exception {
         System.out.println("testWithFailingAssertionCPC");
         final ParallelComputer computer = new ParallelComputer(false, true);
