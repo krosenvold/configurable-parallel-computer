@@ -83,7 +83,6 @@ public class JUnitCorePerformanceTest {
     public void testSpeedWithMethods() throws Exception {
         int NUMCLASSSES = 5;
         int numberOfThreads = 3;
-        System.out.println("testSpeedWithSlowTest");
         Result result = new Result();
         JUnitCore jUnitCore = getJunitCore(result);
 
@@ -137,7 +136,6 @@ public class JUnitCorePerformanceTest {
 
 
     private void validateBounds(long actual, long absoluteLowest, String message){
-        System.out.println("absoluteLowest = " + absoluteLowest);
         assertTrue("Actual runtime " + actual + " for " +  message + " violates minimal expected runtime of " + absoluteLowest +", this is not according to computer physics", actual >= absoluteLowest);
         final long max = (int) (absoluteLowest * 1.25);
         assertTrue("Actual runtime " + actual + " for " + message + " violates maximal expected runtime" + max, actual < max);
