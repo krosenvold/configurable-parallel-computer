@@ -59,7 +59,6 @@ public class ConfigurableParallelComputer extends Computer {
                 true);
     }
     private ConfigurableParallelComputer(boolean fClasses, boolean fMethods, ExecutorService executorService, boolean fixedPool) {
-//        if (fClasses && fMethods && fixedPool) throw new IllegalArgumentException("Due to deadlock risk ConfigurableParallelComputer no longer supports fixed threadpool and bot classes and threads == true");
         this.fClasses = fClasses;
         this.fMethods = fMethods;
         fService = executorService;
@@ -86,20 +85,21 @@ public class ConfigurableParallelComputer extends Computer {
         return runner;
     }
 
-    private RunnerScheduler getMethodInterceptor(){
+    private RunnerScheduler getMethodInterceptor(Runner suite){
         if (fClasses && fMethods) {
-            final NonBlockingAsynchronousRunner blockingAsynchronousRunner = new NonBlockingAsynchronousRunner(fService);
+            final NonBlockingAsynchronousRunner blockingAsynchronousRunner = new NonBlockingAsynchronousRunner(suite, fService);
             nonBlockers.add ( blockingAsynchronousRunner);
             return blockingAsynchronousRunner;
         }
-        return fMethods ? new AsynchronousRunner( fService) : new SynchronousRunner();
+        return fMethods ? new AsynchronousRunner( suite,  fService) : new SynchronousRunner();
     }
-    private RunnerScheduler getClassInterceptor(){
+
+    private RunnerScheduler getClassInterceptor(Runner suite){
         if (fClasses) {
             if (fMethods){
                 return new SynchronousRunner( );
             }  else
-                return  new AsynchronousRunner( fService);
+                return  new AsynchronousRunner( suite, fService);
         }
         return new SynchronousRunner();
     }
@@ -107,13 +107,13 @@ public class ConfigurableParallelComputer extends Computer {
     @Override
     public Runner getSuite(RunnerBuilder builder, java.lang.Class<?>[] classes) throws InitializationError {
         Runner suite = super.getSuite(builder, classes);
-        return fClasses ? parallelize(suite, getClassInterceptor()) : suite;
+        return fClasses ? parallelize(suite, getClassInterceptor(suite)) : suite;
     }
 
     @Override
     protected Runner getRunner(RunnerBuilder builder, Class<?> testClass) throws Throwable {
         Runner runner = super.getRunner(builder, testClass);
-        return fMethods ? parallelize(runner, getMethodInterceptor()) : runner;
+        return fMethods ? parallelize(runner, getMethodInterceptor(runner)) : runner;
     }
 
     @Override

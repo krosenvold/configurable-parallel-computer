@@ -19,6 +19,7 @@
 
 package org.jdogma.junit;
 
+import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 import org.junit.experimental.ParallelComputer;
 import org.junit.runner.Computer;
@@ -29,8 +30,6 @@ import org.junit.runner.notification.RunListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Simple concurrency test of junit core.
@@ -91,11 +90,11 @@ public class JUnitCoreConcurrencyTest {
         runWithFailingAssertion(new ConfigurableParallelComputer(true, true, 2, false));
     }
     @Test
-    public void testWithFailingAssertionCPCJust1() throws Exception {
-        System.out.println("testWithFailingAssertionCPC");
+    public void testWithSlowTestJustAfew() throws Exception {
+        System.out.println("testWithSlowTestJustAfew");
         Result result = new Result();
-        final ConfigurableParallelComputer computer = new ConfigurableParallelComputer(true, true, 2, false);
-        Class[] realClasses = getClassList(FailingAssertions.class, 100);
+        final Computer computer = new ConfigurableParallelComputer(true, true, 3, false);
+        Class[] realClasses = getClassList(SlowTest.class, 5);
         JUnitCore jUnitCore = getJunitCore(result);
         runIt( realClasses, jUnitCore, computer);
     }
@@ -201,7 +200,7 @@ public class JUnitCoreConcurrencyTest {
 
     private Class[] getClassList(Class testClass, int numItems) {
         List<Class> realClasses = new ArrayList<Class>();
-        for (int i = 0; i < NUMTESTS; i ++){
+        for (int i = 0; i < numItems; i ++){
             realClasses.add( testClass);
         }
         return realClasses.toArray(new Class[realClasses.size()]);

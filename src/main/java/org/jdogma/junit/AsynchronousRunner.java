@@ -19,12 +19,9 @@
 
 package org.jdogma.junit;
 
-import org.junit.runners.model.RunnerScheduler;
+import org.junit.runner.Runner;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
 
 /*
  * @author Kristian Rosenvold, kristianAzeniorD0Tno
@@ -32,8 +29,8 @@ import java.util.concurrent.*;
 
 public class AsynchronousRunner extends NonBlockingAsynchronousRunner {
 
-    public AsynchronousRunner(ExecutorService fService) {
-        super( fService);
+    public AsynchronousRunner(Runner suite, ExecutorService fService) {
+        super( suite, fService);
     }
 
     public void finished() {

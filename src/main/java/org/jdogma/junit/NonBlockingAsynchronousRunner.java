@@ -19,6 +19,8 @@
 
 package org.jdogma.junit;
 
+import org.junit.runner.Description;
+import org.junit.runner.Runner;
 import org.junit.runners.model.RunnerScheduler;
 
 import java.util.ArrayList;
@@ -39,14 +41,21 @@ import java.util.concurrent.Future;
 public class NonBlockingAsynchronousRunner implements RunnerScheduler {
     private final List<Future<Object>> futures = Collections.synchronizedList(new ArrayList<Future<Object>>());
     private final ExecutorService fService;
+    private final Runner suite;
 
-    public NonBlockingAsynchronousRunner(ExecutorService fService) {
+    public NonBlockingAsynchronousRunner(Runner suite, ExecutorService fService) {
+        this.suite = suite;
         this.fService = fService;
     }
 
     public void schedule(final Runnable childStatement) {
         final Callable<Object> objectCallable = new Callable<Object>() {
             public Object call() throws Exception {
+                if (suite != null) {
+                    String threadName = suite.getClass().getName();
+                    if (threadName != null)
+                        Thread.currentThread().setName(threadName);
+                }
                 childStatement.run();
                 return null;
             }
@@ -61,7 +70,7 @@ public class NonBlockingAsynchronousRunner implements RunnerScheduler {
     public void waitForCompletion() {
         for (Future<Object> each : futures)
             try {
-               each.get();
+                each.get();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (ExecutionException e) {
