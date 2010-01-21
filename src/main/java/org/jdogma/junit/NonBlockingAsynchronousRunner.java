@@ -51,11 +51,11 @@ public class NonBlockingAsynchronousRunner implements RunnerScheduler {
     public void schedule(final Runnable childStatement) {
         final Callable<Object> objectCallable = new Callable<Object>() {
             public Object call() throws Exception {
-                if (suite != null) {
+                /*if (suite != null) {
                     String threadName = suite.getClass().getName();
                     if (threadName != null)
                         Thread.currentThread().setName(threadName);
-                }
+                } */
                 childStatement.run();
                 return null;
             }
