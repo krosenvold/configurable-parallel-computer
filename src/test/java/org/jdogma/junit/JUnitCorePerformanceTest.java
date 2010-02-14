@@ -34,7 +34,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * These tests assert that the expected peformance of classes/methods/both.
  *
- * While the occasional glitch in computing power can make these tests fail (if actual time exceeds expected + 25%),
+ * While the occasional glitch in computing power can make these tests fail (if actual time exceeds expected + 33%),
  * the lower bound should *never* be violated.
  *
  * These tests usually fail if run in a debugger, due to the changed timings.
@@ -137,7 +137,7 @@ public class JUnitCorePerformanceTest {
 
     private void validateBounds(long actual, long absoluteLowest, String message){
         assertTrue("Actual runtime " + actual + " for " +  message + " violates minimal expected runtime of " + absoluteLowest +", this is not according to computer physics", actual >= absoluteLowest);
-        final long max = (int) (absoluteLowest * 1.25);
+        final long max = (int) (absoluteLowest * 1.33);
         assertTrue("Actual runtime " + actual + " for " + message + " violates maximal expected runtime" + max, actual < max);
     }
 
