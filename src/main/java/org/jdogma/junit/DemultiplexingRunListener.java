@@ -106,7 +106,7 @@ public class DemultiplexingRunListener extends RunListener {
     private static void createTestDescription( Description description, Map<String, TestMethod> result ) {
         final ArrayList<Description> children = description.getChildren();
 
-        TestDescription current = new TestDescription( Description.createSuiteDescription( description.getDisplayName()));
+        TestDescription current = new TestDescription( description);
 
         for (Description item : children) {
             if (item.isTest()) {
@@ -146,82 +146,48 @@ public class DemultiplexingRunListener extends RunListener {
             final boolean result = incrementCompletedChildrenCount();
             if ( result )
             {
-                try
-                {
-                    recordingRunListener.replayStart( target );
-                    for ( TestMethod testMethod : testMethods )
-                    {
-                        testMethod.replay( target );
-                    }
-                    recordingRunListener.replayEnd( target );
-                }
-                catch ( Exception e )
-                {
-                    throw new RuntimeException( e );
-                }
+                notifyListener( target );
+                notifyListener( recordingRunListener.getResultForThisClass().createListener() );
             }
             return result;
+        }
+
+        private void notifyListener( RunListener target )
+        {
+            try
+            {
+                recordingRunListener.replayStart( target );
+                for ( TestMethod testMethod : testMethods )
+                {
+                    testMethod.replay( target, recordingRunListener.getResultForThisClass() );
+                }
+                recordingRunListener.replayEnd( target );
+            }
+            catch ( Exception e )
+            {
+                throw new RuntimeException( e );
+            }
         }
 
     }
 
 
-    public static class RecordingRunListener extends RunListener {
+    public static class RecordingRunListener {
         private volatile Description testRunStarted;
-        private final List<Description> testStarted = Collections.synchronizedList(new ArrayList<Description>());
-        private final List<Description> testFinished = Collections.synchronizedList(new ArrayList<Description>());
-        private final List<Failure> testFailure = Collections.synchronizedList(new ArrayList<Failure>());
-        private final List<Failure> testAssumptionFailure = Collections.synchronizedList(new ArrayList<Failure>());
-        private final List<Description> testIgnored = Collections.synchronizedList(new ArrayList<Description>());
         private final Result resultForThisClass = new Result();
-        private final RunListener classRunListener = resultForThisClass.createListener();
 
         public RecordingRunListener( Description testRunStarted )
         {
             this.testRunStarted = testRunStarted;
         }
 
-        @Override
-        public void testRunStarted(Description description) throws Exception {
-            this.testRunStarted = description;
-        }
-
-        @Override
-        public void testRunFinished(Result result) throws Exception {
-            throw new IllegalStateException("This method should not be called on the recorder");
-        }
-
-        @Override
-        public void testStarted(Description description) throws Exception {
-            testStarted.add(description);
-            classRunListener.testStarted(description);
-        }
-
-        @Override
-        public void testFinished(Description description) throws Exception {
-            testFinished.add(description);
-            classRunListener.testFinished(description);
-        }
-
-        @Override
-        public void testFailure(Failure failure) throws Exception {
-            testFailure.add(failure);
-            classRunListener.testFailure(failure);
-        }
-
-        @Override
-        public void testAssumptionFailure(Failure failure) {
-            testAssumptionFailure.add(failure);
-        }
-
-        @Override
-        public void testIgnored(Description description) throws Exception {
-            testIgnored.add(description);
+        public Result getResultForThisClass()
+        {
+            return resultForThisClass;
         }
 
         public void replayStart(RunListener target) throws Exception {
             target.testRunStarted(testRunStarted);
-
         }
         public void replayEnd(RunListener target) throws Exception {
             target.testRunFinished(resultForThisClass);

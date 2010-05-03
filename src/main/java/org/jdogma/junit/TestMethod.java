@@ -1,6 +1,7 @@
 package org.jdogma.junit;
 
 import org.junit.runner.Description;
+import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 
@@ -49,7 +50,7 @@ public class TestMethod
         this.testAssumptionFailure = failure;
     }
 
-    public void replay(RunListener runListener)
+    public void replay( RunListener runListener, Result resultForThisClass )
         throws Exception
     {
         if (ignored != null){
