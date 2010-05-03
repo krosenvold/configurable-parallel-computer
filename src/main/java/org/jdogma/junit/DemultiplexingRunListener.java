@@ -25,6 +25,7 @@ import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -143,7 +144,7 @@ public class DemultiplexingRunListener
 
         private AtomicInteger numberOfCompletedChildren = new AtomicInteger( 0 );
 
-        private List<TestMethod> testMethods = new ArrayList<TestMethod>();
+        private final List<TestMethod> testMethods = Collections.synchronizedList(new ArrayList<TestMethod>());
 
         public TestDescription( Description description )
         {
@@ -175,12 +176,15 @@ public class DemultiplexingRunListener
         {
             try
             {
-                target.testRunStarted( testRunStarted );
-                for ( TestMethod testMethod : testMethods )
+                synchronized ( target )
                 {
-                    testMethod.replay( target );
+                    target.testRunStarted( testRunStarted );
+                    for ( TestMethod testMethod : testMethods )
+                    {
+                        testMethod.replay( target );
+                    }
+                    target.testRunFinished( resultForThisClass );
                 }
-                target.testRunFinished( resultForThisClass );
             }
             catch ( Exception e )
             {

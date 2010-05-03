@@ -130,6 +130,39 @@ public class DemultiplexingRunListenerTest {
         assertEquals(3, diagnosticRunListener.getNumTestStarted().get());
     }
 
+    @Test
+    public void testJunitREsultCountingPlain() throws Exception {
+        Result result = new Result();
+
+        JUnitCore jUnitCore = new JUnitCore();
+
+        jUnitCore.addListener( result.createListener());
+        Computer computer = new Computer();
+
+        jUnitCore.run(computer, new Class[] { NothingGood.class, Dummy2.class});
+
+        assertEquals(5, result.getRunCount());
+        assertEquals( 1, result.getIgnoreCount() );
+        assertEquals( 2, result.getFailureCount() );
+    }
+
+    @Test
+    public void testJunitREsultCounting() throws Exception {
+        Result result = new Result();
+        DemultiplexingRunListener demultiplexingRunListener = new DemultiplexingRunListener(result.createListener());
+
+        JUnitCore jUnitCore = new JUnitCore();
+
+        jUnitCore.addListener( demultiplexingRunListener);
+        Computer computer = new Computer();
+
+        jUnitCore.run(computer, new Class[] { NothingGood.class, Dummy2.class});
+
+        assertEquals(5, result.getRunCount());
+        assertEquals( 1, result.getIgnoreCount() );
+        assertEquals( 2, result.getFailureCount() );
+    }
+
 
     private Description getDescription2() {
         return Description.createTestDescription( Dummy2.class, "testDummy2");
