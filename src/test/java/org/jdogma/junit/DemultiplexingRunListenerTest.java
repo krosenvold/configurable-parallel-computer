@@ -25,13 +25,12 @@ import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.RunListener;
-import org.mockito.Matchers;
 
 import java.util.Map;
 
-import static junit.framework.Assert.*;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.verify;
 
 /*
  * @author Kristian Rosenvold, kristianAzeniorD0Tno
@@ -99,7 +98,7 @@ public class DemultiplexingRunListenerTest {
         testRunDescription.addChild( description1_2);
         testRunDescription.addChild( description2);
 
-        final Map<String, TestMethod> map = DemultiplexingRunListener.createAnnotatedDescriptions(testRunDescription);
+        final Map<String, DemultiplexingRunListener.TestMethod> map = DemultiplexingRunListener.createTestMethodMap(testRunDescription);
         assertNotNull( map);
 
 /*        DiagnosticRunListener target = new DiagnosticRunListener();

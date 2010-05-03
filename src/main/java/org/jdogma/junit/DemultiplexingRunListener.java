@@ -25,119 +25,138 @@ import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Demultiplexes threaded running og tests into something that does not look threaded.
+ * Demultiplexes threaded running of tests into something that does not look threaded.
  * Essentially makes a threaded junit core RunListener behave like something like a
  * junit4 reporter can handle.
  * <p/>
  * This version is non-ketchup mode, outputting test results as the individual suites complete.
  *
- * @author Kristian Rosenvold, kristianAzeniorD0Tno
+ * @author Kristian Rosenvold
  */
-public class DemultiplexingRunListener extends RunListener {
+public class DemultiplexingRunListener
+    extends RunListener
+{
     private final RunListener realtarget;
 
-    private volatile Map<String, TestMethod> annotatedDescriptionMap;
+    private volatile Map<String, TestMethod> testMethods;
 
-    public DemultiplexingRunListener(RunListener realtarget) {
+    public DemultiplexingRunListener( RunListener realtarget )
+    {
         this.realtarget = realtarget;
     }
 
     @Override
-    public void testRunStarted(Description description) throws Exception {
-        annotatedDescriptionMap = createAnnotatedDescriptions(description);
+    public void testRunStarted( Description description )
+        throws Exception
+    {
+        testMethods = createTestMethodMap( description );
     }
 
     @Override
-    public void testRunFinished(Result outerResult) throws Exception {
-        // SHould be finished through all the tests.
+    public void testFinished( Description description )
+        throws Exception
+    {
+        final TestMethod testDescription = getTestDescription( description );
+        testDescription.testFinished( description );
+        testDescription.getParent().setDone( realtarget );
     }
 
     @Override
-    public void testStarted(Description description) throws Exception {
-        final TestMethod testDescription = getTestDescription(description);
+    public void testIgnored( Description description )
+        throws Exception
+    {
+        final TestMethod testDescription = getTestDescription( description );
+        testDescription.testIgnored( description );
+        testDescription.getParent().setDone( realtarget );
     }
 
     @Override
-    public void testFinished(Description description) throws Exception {
-        final TestMethod testDescription = getTestDescription(description);
-        testDescription.testFinished(description);
-        testDescription.getParent().setDone(realtarget);
+    public void testFailure( Failure failure )
+        throws Exception
+    {
+        getTestDescription( failure.getDescription() ).testFailure( failure );
     }
 
     @Override
-    public void testIgnored(Description description) throws Exception {
-        final TestMethod testDescription = getTestDescription(description);
-        testDescription.testIgnored(description);
-    }
-
-    @Override
-    public void testFailure(Failure failure) throws Exception {
-        getTestDescription(failure.getDescription()).testFailure(failure);
-    }
-
-    @Override
-    public void testAssumptionFailure(Failure failure) {
-        final TestMethod testDescription = getTestDescription(failure.getDescription());
-        testDescription.testAssumptionFailure(failure);
+    public void testAssumptionFailure( Failure failure )
+    {
+        final TestMethod testDescription = getTestDescription( failure.getDescription() );
+        testDescription.testAssumptionFailure( failure );
     }
 
 
-    private TestMethod getTestDescription(Description description) {
-        final TestMethod result = annotatedDescriptionMap.get(description.getDisplayName());
-        if (result == null)
-            throw new IllegalStateException("No TestDescription found for " + description + ", inconsistent junit behaviour. Unknown junit version?");
+    private TestMethod getTestDescription( Description description )
+    {
+        final TestMethod result = testMethods.get( description.getDisplayName() );
+        if ( result == null )
+        {
+            throw new IllegalStateException( "No TestDescription found for " + description +
+                ", inconsistent junit behaviour. Unknown junit version?" );
+        }
         return result;
     }
 
 
-    static Map<String, TestMethod> createAnnotatedDescriptions(Description description) {
+    static Map<String, TestMethod> createTestMethodMap( Description description )
+    {
         Map<String, TestMethod> result = new HashMap<String, TestMethod>();
-        createTestDescription(description, result );
+        createTestDescription( description, result );
         return result;
     }
 
-    private static void createTestDescription( Description description, Map<String, TestMethod> result ) {
+    private static void createTestDescription( Description description, Map<String, TestMethod> result )
+    {
         final ArrayList<Description> children = description.getChildren();
 
-        TestDescription current = new TestDescription( description);
+        TestDescription current = new TestDescription( description );
 
-        for (Description item : children) {
-            if (item.isTest()) {
+        for ( Description item : children )
+        {
+            if ( item.isTest() )
+            {
                 TestMethod testMethod = new TestMethod( item, current );
-                if (item.getDisplayName() != null){
-                    result.put( item.getDisplayName(), testMethod);
+                if ( item.getDisplayName() != null )
+                {
+                    result.put( item.getDisplayName(), testMethod );
                 }
                 current.addTestMethod( testMethod );
-            } else {
-                createTestDescription(item, result );
+            }
+            else
+            {
+                createTestDescription( item, result );
             }
         }
     }
 
     public static class TestDescription
     {
-        private final Description description;
-        private final RecordingRunListener recordingRunListener;
-        private AtomicInteger numberOfCompletedChildren = new AtomicInteger(0);
-        private List<TestMethod> testMethods = new ArrayList<TestMethod>( );
+        private final Result resultForThisClass = new Result();
 
-        public TestDescription( Description description ) {
-            this.description = description;
-            recordingRunListener = new RecordingRunListener(description);
+        private final Description testRunStarted;
+
+
+        private AtomicInteger numberOfCompletedChildren = new AtomicInteger( 0 );
+
+        private List<TestMethod> testMethods = new ArrayList<TestMethod>();
+
+        public TestDescription( Description description )
+        {
+            testRunStarted = description;
         }
 
-        private void addTestMethod(TestMethod testMethod){
-            testMethods.add( testMethod);
+        private void addTestMethod( TestMethod testMethod )
+        {
+            testMethods.add( testMethod );
         }
 
-        private boolean incrementCompletedChildrenCount() {
+        private boolean incrementCompletedChildrenCount()
+        {
             return testMethods.size() == numberOfCompletedChildren.incrementAndGet();
         }
 
@@ -147,7 +166,7 @@ public class DemultiplexingRunListener extends RunListener {
             if ( result )
             {
                 notifyListener( target );
-                notifyListener( recordingRunListener.getResultForThisClass().createListener() );
+                notifyListener( resultForThisClass.createListener() );
             }
             return result;
         }
@@ -156,45 +175,92 @@ public class DemultiplexingRunListener extends RunListener {
         {
             try
             {
-                recordingRunListener.replayStart( target );
+                target.testRunStarted( testRunStarted );
                 for ( TestMethod testMethod : testMethods )
                 {
-                    testMethod.replay( target, recordingRunListener.getResultForThisClass() );
+                    testMethod.replay( target );
                 }
-                recordingRunListener.replayEnd( target );
+                target.testRunFinished( resultForThisClass );
             }
             catch ( Exception e )
             {
                 throw new RuntimeException( e );
             }
         }
-
     }
 
+    static class TestMethod
+    {
+        private final Description description;
 
-    public static class RecordingRunListener {
-        private volatile Description testRunStarted;
-        private final Result resultForThisClass = new Result();
+        private final TestDescription parent;
 
-        public RecordingRunListener( Description testRunStarted )
+        private volatile Failure testFailure;
+
+        private volatile Failure testAssumptionFailure;
+
+        private volatile Description finished;
+
+        private volatile Description ignored;
+
+
+        public TestMethod( Description description, TestDescription current )
         {
-            this.testRunStarted = testRunStarted;
+            this.description = description;
+            this.parent = current;
         }
 
-        public Result getResultForThisClass()
+
+        public void testFinished( Description description )
+            throws Exception
         {
-            return resultForThisClass;
-        }
-
-        public void replayStart(RunListener target) throws Exception {
-            target.testRunStarted(testRunStarted);
-        }
-        public void replayEnd(RunListener target) throws Exception {
-            target.testRunFinished(resultForThisClass);
+            this.finished = description;
         }
 
 
+        public void testIgnored( Description description )
+            throws Exception
+        {
+            ignored = description;
+        }
 
+        public void testFailure( Failure failure )
+            throws Exception
+        {
+            this.testFailure = failure;
+        }
+
+        public void testAssumptionFailure( Failure failure )
+        {
+            this.testAssumptionFailure = failure;
+        }
+
+        public void replay( RunListener runListener )
+            throws Exception
+        {
+            if ( ignored != null )
+            {
+                runListener.testIgnored( ignored );
+            }
+            else
+            {
+                runListener.testStarted( description );
+                if ( testFailure != null )
+                {
+                    runListener.testFailure( testFailure );
+                }
+                if ( testAssumptionFailure != null )
+                {
+                    runListener.testAssumptionFailure( testAssumptionFailure );
+                }
+                runListener.testFinished( finished );
+            }
+        }
+
+        public TestDescription getParent()
+        {
+            return parent;
+        }
     }
 
 }
