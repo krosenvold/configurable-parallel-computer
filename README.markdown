@@ -6,6 +6,10 @@ To install: Build from source using mvn install
 
 <h2>RELEASES</h2>
 
+1.6
+
+Fixed problems with missing test results when some tests failed.
+
 1.5
 
 - Re-instated BOTH style executions and added test cases to prove that they work.
