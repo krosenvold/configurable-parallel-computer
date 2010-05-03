@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class DemultiplexingRunListener extends RunListener {
     private final RunListener realtarget;
 
-    private volatile Map<String, AnnotatedDescription> annotatedDescriptionMap;
+    private volatile Map<String, TestDescription> annotatedDescriptionMap;
 
     public DemultiplexingRunListener(RunListener realtarget) {
         this.realtarget = realtarget;
@@ -58,54 +58,55 @@ public class DemultiplexingRunListener extends RunListener {
 
     @Override
     public void testStarted(Description description) throws Exception {
-        final AnnotatedDescription annotatedDescription = getAnnotatedDescription(description);
-        annotatedDescription.startIfUnstarted();
-        annotatedDescription.getRecordingRunListener().testStarted(description);
+        final TestDescription testDescription = getTestDescription(description);
+        testDescription.startIfUnstarted();
+        testDescription.getRecordingRunListener().testStarted(description);
     }
 
     @Override
     public void testFinished(Description description) throws Exception {
-        final AnnotatedDescription annotatedDescription = getAnnotatedDescription(description);
-        annotatedDescription.getRecordingRunListener().testFinished(description);
-        annotatedDescription.setDone(realtarget);
+        final TestDescription testDescription = getTestDescription(description);
+        testDescription.getRecordingRunListener().testFinished(description);
+        testDescription.setDone(realtarget);
     }
 
     @Override
     public void testIgnored(Description description) throws Exception {
-        final AnnotatedDescription annotatedDescription = getAnnotatedDescription(description);
-        annotatedDescription.getRecordingRunListener().testIgnored(description);
+        final TestDescription testDescription = getTestDescription(description);
+        testDescription.startIfUnstarted();
+        testDescription.getRecordingRunListener().testIgnored(description);
     }
 
     @Override
     public void testFailure(Failure failure) throws Exception {
-        final AnnotatedDescription annotatedDescription = getAnnotatedDescription(failure.getDescription());
-        annotatedDescription.getRecordingRunListener().testFailure(failure);
+        final TestDescription testDescription = getTestDescription(failure.getDescription());
+        testDescription.getRecordingRunListener().testFailure(failure);
     }
 
     @Override
     public void testAssumptionFailure(Failure failure) {
-        final AnnotatedDescription annotatedDescription = getAnnotatedDescription(failure.getDescription());
-        annotatedDescription.getRecordingRunListener().testAssumptionFailure(failure);
+        final TestDescription testDescription = getTestDescription(failure.getDescription());
+        testDescription.getRecordingRunListener().testAssumptionFailure(failure);
     }
 
 
-    private AnnotatedDescription getAnnotatedDescription(Description description) {
-        final AnnotatedDescription result = annotatedDescriptionMap.get(description.getDisplayName());
+    private TestDescription getTestDescription(Description description) {
+        final TestDescription result = annotatedDescriptionMap.get(description.getDisplayName());
         if (result == null)
-            throw new IllegalStateException("No AnnotatedDescription found for " + description + ", inconsistent junit behaviour. Unknown junit version?");
+            throw new IllegalStateException("No TestDescription found for " + description + ", inconsistent junit behaviour. Unknown junit version?");
         return result;
     }
 
 
-    static Map<String, AnnotatedDescription> createAnnotatedDescriptions(Description description) {
-        Map<String, AnnotatedDescription> result = new HashMap<String, AnnotatedDescription>();
+    static Map<String, TestDescription> createAnnotatedDescriptions(Description description) {
+        Map<String, TestDescription> result = new HashMap<String, TestDescription>();
         createAnnotatedDescriptions(description, result, null);
         return result;
     }
 
-    private static void createAnnotatedDescriptions(Description description, Map<String, AnnotatedDescription> result, AnnotatedDescription parent) {
+    private static void createAnnotatedDescriptions(Description description, Map<String, TestDescription> result, TestDescription parent) {
         final ArrayList<Description> children = description.getChildren();
-        AnnotatedDescription current = new AnnotatedDescription(parent, description);
+        TestDescription current = new TestDescription(parent, description);
         if (description.getDisplayName() != null)
             result.put(description.getDisplayName(), current);
 
@@ -114,15 +115,16 @@ public class DemultiplexingRunListener extends RunListener {
         }
     }
 
-    static class AnnotatedDescription {
-        private final AnnotatedDescription parent;
+    static class TestDescription
+    {
+        private final TestDescription parent;
         private final Description description;
         private final RecordingRunListener recordingRunListener;
         private AtomicBoolean started = new AtomicBoolean(false);
         private AtomicInteger numberOfCompletedChildren = new AtomicInteger(0);
 
 
-        public AnnotatedDescription(AnnotatedDescription parent, Description description) {
+        public TestDescription( TestDescription parent, Description description) {
             this.parent = parent;
             this.description = description;
             recordingRunListener = new RecordingRunListener();

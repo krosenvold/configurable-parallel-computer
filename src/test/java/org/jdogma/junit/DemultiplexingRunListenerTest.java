@@ -101,16 +101,16 @@ public class DemultiplexingRunListenerTest {
         testRunDescription.addChild( description1_2);
         testRunDescription.addChild( description2);
 
-        final Map<String,DemultiplexingRunListener.AnnotatedDescription> map = DemultiplexingRunListener.createAnnotatedDescriptions(testRunDescription);
+        final Map<String, DemultiplexingRunListener.TestDescription> map = DemultiplexingRunListener.createAnnotatedDescriptions(testRunDescription);
         assertNotNull( map);
 
         DiagnosticRunListener target = new DiagnosticRunListener();
-        DemultiplexingRunListener.AnnotatedDescription annotatedDescription1_1 = map.get(description1_1.getDisplayName());
-        assertFalse( annotatedDescription1_1.setDone(target));
-        DemultiplexingRunListener.AnnotatedDescription annotatedDescription1_2 = map.get(description1_2.getDisplayName());
-        assertFalse( annotatedDescription1_2.setDone(target));
-        DemultiplexingRunListener.AnnotatedDescription annotatedDescription2 = map.get(description2.getDisplayName());
-        assertTrue( annotatedDescription2.setDone(target));
+        DemultiplexingRunListener.TestDescription testDescription1_1 = map.get(description1_1.getDisplayName());
+        assertFalse( testDescription1_1.setDone(target));
+        DemultiplexingRunListener.TestDescription testDescription1_2 = map.get(description1_2.getDisplayName());
+        assertFalse( testDescription1_2.setDone(target));
+        DemultiplexingRunListener.TestDescription testDescription2 = map.get(description2.getDisplayName());
+        assertTrue( testDescription2.setDone(target));
     }
 
     @Test
