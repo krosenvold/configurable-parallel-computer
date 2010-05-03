@@ -6,9 +6,13 @@
     <groupId>org.jdogma.junit</groupId>
     <artifactId>configurable-parallel-computer</artifactId>
     <packaging>jar</packaging>
-    <version>1.6-SNAPSHOT</version>
+    <version>1.6</version>
     <name>Test</name>
     <url>http://github.com/krosenvold/configurable-parallel-computer</url>
+    <scm>
+      <developerConnection>ssh://git@github.com:krosenvold/configurable-parallel-computer.git</developerConnection>
+      <url>git://github.com/krosenvold/configurable-parallel-computer</url>
+    </scm>
 
     <licenses>
         <license>
@@ -42,14 +46,14 @@
     </build>
     <distributionManagement>
         <repository>
-            <id>snapshot-repo</id>
-            <name>Repository Name</name>
-            <url>scp://host/path/to/repo</url>
+            <id>base26</id>
+            <name>base26</name>
+            <url>http://base26:8081/nexus/content/repositories/base26</url>
         </repository>
         <snapshotRepository>
-            <id>snapshot-repo</id>
-            <name>Repository Name</name>
-            <url>scp://host/path/to/repo</url>
+          <id>base26snapshot</id>
+          <name>base26snapshot</name>
+          <url>http://base26:8081/nexus/content/repositories/base26snapshot</url>
         </snapshotRepository>
     </distributionManagement>
 
