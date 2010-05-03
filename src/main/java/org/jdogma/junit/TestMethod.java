@@ -15,9 +15,12 @@ public class TestMethod
 
     private volatile Description ignored;
 
-    public TestMethod( Description description )
+    private final DemultiplexingRunListener.TestDescription parent;
+
+    public TestMethod( Description description, DemultiplexingRunListener.TestDescription current )
     {
         this.description = description;
+        this.parent = current;
     }
 
 
@@ -26,6 +29,8 @@ public class TestMethod
     {
         this.finished = description;
     }
+
+
 
     public void testIgnored( Description description )
         throws Exception
@@ -53,11 +58,16 @@ public class TestMethod
             runListener.testStarted( description );
             if (testFailure != null){
                 runListener.testFailure(  testFailure );
-            }                                                                                      |
+            }
             if (testAssumptionFailure != null){
                 runListener.testAssumptionFailure(  testAssumptionFailure );
             }
             runListener.testFinished(  finished );
         }
+    }
+
+    public DemultiplexingRunListener.TestDescription getParent()
+    {
+        return parent;
     }
 }
